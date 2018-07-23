@@ -23,7 +23,7 @@ The following Python packages must be installed:
 
 ## How to use
 To start working with the bot, you need to configure the config (py) and enter all the necessary data.
-If you choose to use an antikapchi, you must register at [getcaptchasolution.com] (http://getcaptchasolution.com/qocusckanf) and get the key
+If you choose to use an antikapchi, you must register at [getcaptchasolution.com](http://getcaptchasolution.com/qocusckanf) and get the key
 
 After that, you need to run bot.py (the extension must be associated with Python).
 
