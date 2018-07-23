@@ -12,7 +12,9 @@
  
 ## About the bot
 The bot on command starts a vote to exclude a specific user.
-Also, the bot keeps a list of excluded users, because of what an excluded user can not add to the conversation again, until the administrator unlocks it
+
+Also, the bot keeps a list of excluded users, because of what an excluded user can not add to the conversation again, until the administrator unlocks it.
+
 The bot has a built-in anti-flood system and there is a possibility to use the Captcha automatic.
 
 ## Technical requirements
@@ -48,8 +50,10 @@ In the development of this bot involved:
 
 # RUS DESCRIPION:
 ## О боте
-Бот по команде запускает голосование за исключение определенного пользователя. 
-Так же бот хранит список исключенных пользователей, из-за чего исключенного пользователя не смогут снова добавить в беседу, пока администратор его не разблокирует
+Бот по команде запускает голосование за исключение определенного пользователя.
+
+Так же бот хранит список исключенных пользователей, из-за чего исключенного пользователя не смогут снова добавить в беседу, пока администратор его не разблокирует.
+
 Бот имеет встроенную антифлуд систему и есть возможность использовать автоввод капчи.
 
 ## Технические требования
