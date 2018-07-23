@@ -1,0 +1,5 @@
+config.py
+*.pyc
+v.ban
+PythonAntiCaptchaImages/
+__pycache__/
