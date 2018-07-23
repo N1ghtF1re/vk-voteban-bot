@@ -5,8 +5,8 @@
 <a href="https://github.com/N1ghtF1re/voteban-bot/stargazers"><img src="https://img.shields.io/github/stars/N1ghtF1re/voteban-bot.svg" alt="Stars"></a>
 <a href="https://github.com/N1ghtF1re/voteban-bot/releases"><img src="https://img.shields.io/badge/downloads-15-brightgreen.svg" alt="Total Downloads"></a>
 <a href="https://github.com/N1ghtF1re/voteban-bot/releases"><img src="https://img.shields.io/github/tag/N1ghtF1re/voteban-bot.svg" alt="Latest Stable Version"></a>
-<!--<a href="https://github.com/N1ghtF1re/blob/master/LICENSE"><img src="https://img.shields.io/github/license/N1ghtF1re/voteban-bot.svg" alt="License"></a>
--->
+<a href="https://github.com/N1ghtF1re/blob/master/LICENSE"><img src="https://img.shields.io/github/license/N1ghtF1re/voteban-bot.svg" alt="License"></a>
+
 </p>
 </p>
  
