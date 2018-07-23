@@ -1,5 +1,7 @@
+vk_config.v2.json
 config.py
+
 *.pyc
-v.ban
+*.ban
 PythonAntiCaptchaImages/
 __pycache__/
