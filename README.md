@@ -41,7 +41,7 @@ You can also edit the constants in bot.py (the time of voting, the number of vot
 + !voteban USER_ID - create a poll. The user ID is in his link after vk.com/. Voting takes 5 minutes. The conditions for exclusion: more than 5 participants in the conversation voted, more "placet" than "against";
 + !votehelp - Help with using the bot;
 + !banlist - View the blocked users in this conversation;
-+ !unban ID_USER [ONLY FOR ADMINISTRATORS] to unlock the user.
++ !unban USER_ID [ONLY FOR ADMINISTRATORS] to unlock the user.
 
 ## Developers
 In the development of this bot involved:
