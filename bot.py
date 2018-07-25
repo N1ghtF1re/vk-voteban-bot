@@ -19,6 +19,9 @@ from python3_anticaptcha import errors
 
 from config import login,password,my_id,isUsedAntiCaptcha, antiCaptchaKey
 
+import sys
+
+
 # Constants
 nokick = {'sasha_pankratiew', 'alexey_shilo', 'id136385345', 'id138738887', '138738887', '136385345'}
 
@@ -266,6 +269,19 @@ def writeMessage(vk, chat_id, message):
     '''
     vk.method('messages.send', {'chat_id':chat_id, 'message': message})
 
+def kickUser(vk, chat_id, user_id):
+    ''' Выгоняет пользователя из беседы
+
+        :param vk: Объект сессии ВК
+        :param user_id: id пользователях
+        :param chat_id: id беседы ВК
+
+        :NoReturn:
+    '''
+    try:
+        vk.method('messages.removeChatUser', {'chat_id': chat_id, 'user_id':getUser(vk,user_id)[0]['id']})
+    except:
+        writeMessage(vk, chat_id, '[VOTEBAN] Не могу выгнать пользователя. Скорее всего, меня лишили прав администратора')
 
 # --------------------------- FILES ----------------------------------
 def saveListToFile(my_list,file):
@@ -338,7 +354,7 @@ def checkForBan(vk, needkick, event):
         if isUserInConversation(vk,el['id'], event.chat_id) and (el['chat'] == event.chat_id):
         # Пользователь ливнул во время голосования и вернулся
             writeMessage(vk, event.chat_id, '[VOTEBAN] Ну вот мы и встретились...')
-            vk.method('messages.removeChatUser', {'chat_id': event.chat_id, 'user_id':getUser(vk,el['id'])[0]['id']})
+            kickUser(vk, event.chat_id, el['id'])
 
 # ------------------------------ HANDLERS -------------------------------------------
 
@@ -364,7 +380,7 @@ def finishVote(vk, chat_id, kick_list, needkick):
             if(isUserInConversation(vk,kick_info['id'], chat_id)): # Если пользователь все еще в беседе
                 writeMessage(vk, chat_id, '[VOTEBAN] Пользователь исключен')
                 # Исключаем пользователя
-                vk.method('messages.removeChatUser', {'chat_id': chat_id, 'user_id':getUser(vk,kick_info['id'])[0]['id']})
+                kickUser(vk, chat_id, kick_info['id'])
             else: # Пользователь ливнул во время голосования
                 writeMessage(vk,chat_id, '[VOTEBAN] Этот говнюк ливнул. Зайдет - кикну')
 
@@ -447,6 +463,7 @@ def deletespamlist(event,spamlist):
 # ------------------------ MAIN DEF -------------------------------------------
 
 def main():
+
     print("I'm starting my work ...")
     global needkick
     global kick_list
@@ -501,7 +518,7 @@ def main():
 
 
                 if (len(answer) == 2) and (answer[0].lower() == '!voteban'): # если сообщение из двух строк и первое - служебное !voteban
-                    if not(isAdmin(vk_session, my_id, chat_id)):
+                    if not(isAdmin(vk_session, my_id, chat_id)): # Если бот не является админом
                         user_message = '[VOTEBAN] Ошибка: У меня нет прав администратора'
                         writeMessage(vk_session, chat_id, user_message)
                     else:
@@ -574,7 +591,13 @@ try:
     if __name__ == '__main__':
         main()
 except Exception as error_msg:
-    print(error_msg)
+    try:
+        f = open('error.log', 'a')
+    except IOError:
+        f = open('error.log', 'w')
+    print(str(datetime.now()), file=f, end=' ')
+    print(error_msg, file = f)
+    f.close()
     print(needkick)
     saveListToFile(needkick, file_name)
     print("I'm finishing my work ...")
