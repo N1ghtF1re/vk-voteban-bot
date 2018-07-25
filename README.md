@@ -35,7 +35,7 @@ Option 2: open the terminal, move through cd to the directory of this repository
 python bot.py
 ```
 
-You can also edit the constants in bot.py (the time of voting, the number of votes, etc.)
+You can also edit the constants in const.py (the time of voting, the number of votes, etc.)
 
 ## The bot commands
 + !voteban USER_ID - create a poll. The user ID is in his link after vk.com/. Voting takes 5 minutes. The conditions for exclusion: more than 5 participants in the conversation voted, more "placet" than "against";
@@ -74,7 +74,7 @@ In the development of this bot involved:
 python bot.py
 ```
 
-Так же можно отредактировать вынесенные константы в bot.py (время голосования, количество голосов и т.д.)
+Так же можно отредактировать вынесенные константы в const.py (время голосования, количество голосов и т.д.)
 
 # Команды бота
 + !voteban ID_ПОЛЬЗОВАТЕЛЯ - создать голосование. ID пользователя находится в его ссылке после vk.com/. Голосование длится 5 минут. Условия исключения: голосовало более 5 участников беседы, голосов "за" набрано больше, чем "против"; 
