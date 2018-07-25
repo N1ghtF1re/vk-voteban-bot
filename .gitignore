@@ -5,3 +5,5 @@ config.py
 *.ban
 PythonAntiCaptchaImages/
 __pycache__/
+
+error.log

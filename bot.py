@@ -21,39 +21,14 @@ from config import login,password,my_id,isUsedAntiCaptcha, antiCaptchaKey
 
 import sys
 
+# UNITS:
+import const
+import bot_msg
 
-# Constants
-nokick = {'sasha_pankratiew', 'alexey_shilo', 'id136385345', 'id138738887', '138738887', '136385345'}
+from units import users
+from units import chats
+from units.vkapi import writeMessage, kickUser
 
-file_name = 'v.ban'
-
-vote_count = 5 # Минимальное кол-во голосов
-vote_time = 5 # Количество минут, сколько длится голосование
-spam_time = 10.0 # Анти-спам задержка
-friends_time = 60.0 # Интервал (в минутах) проверки друзей
-backups_time = 5 # Интервал проведения бэкапа списка заблокированных
-
-
-anti_kick_commands = {'!нет','!-','!no','!некик','!некикаемнахой'} # Команды для кика
-kick_commands = {'!да', '!yes', '!+', 'кик','!кикаемнахой'} # Команды против кика
-
-# String Constants
-
-finish_message = '[VOTEBAN] Голосование за кик {0} завершено. Голосов за: {1}, голосов против: {2}.'
-startvote_message = '[VOTEBAN] Кикаем [{0}|{1}]?\nЧтобы проголосовать за - пишите "!да" / "!+" / "!yes". Против - "!нет" / "!-" / "!no"\nГолосование продлится {2} минут.\n' \
-                    'Для голосования необходимо набрать {3} голосов'
-vote_message = '[VOTEBAN] Голос принят. Кол-во голосов за кик: {0}. Кол-во голосов против кика: {1}'
-help_message = '''[VOTEBAN] Вас привествует бот, позволяющий делать голосование за исключение какого-либо пользователя.
-
-Комманды:
-- !voteban ID_ПОЛЬЗОВАТЕЛЯ - создать голосование. ID пользователя находится в его ссылке после vk.com/. Голосование длится {0} минут. Условия исключения: голосовало более {1} участников беседы, голосов "за" набрано больше, чем "против"
-- !votehelp - Помощь по использованию бота
-- !banlist - Просмотреть заблокированных в этой беседе пользоваетелей
-- !unban ID_ПОЛЬЗОВАТЕЛЯ [ТОЛЬКО ДЛЯ АДМИНИСТРАТОРОВ БЕСЕДЫ] - разблокировать пользователя
-
-Авторы бота: [id136385345|Сашка Панкратьев] и [id138738887|Лёшка Лепёшка]
-
-Со временем функционал бота будет пополняться.'''
 
 # INITIANALISATION
 
@@ -68,122 +43,6 @@ needkick = [] # Пользователи в ЧС беседы. Формат: [{'
 kick_list = []
 spam_list = []
 
-# ------------------------------- USERS UTILS: ---------------------------------------
-def getUser(vk, user_id, name_case = 'gen'):
-    ''' Получаем информацию о пользователе с id = id
-
-        :param vk: Объект сессии ВК
-        :param user_id: ID пользователя (id или screen_id)
-        :param name_case: Падеж имен пользователей. Подробнее:
-                                      https://vk.com/dev/users.get
-
-        :return: Объект пользователя | None если он не найден
-    '''
-
-    try:
-        return vk.method('users.get', {'user_ids': user_id, 'name_case':name_case})
-    except vk_api.exceptions.ApiError:
-        return None # Пользователь не найден
-
-
-def getName(vk, user_id, name_case = 'gen'):
-    ''' Получаем строку с фамилей и именем пользователя в нужном падеже
-
-        :param vk: Объект сессии ВК
-        :param user_id: id пользователя (id или screen_id)
-        :param name_case: Падеж имен пользователей. Подробнее:
-                                      https://vk.com/dev/users.get
-
-        :return: [str] Фамилия Имя | None, если его не существует
-    '''
-    user = getUser(vk,user_id, name_case) # Получаем объект пользователя
-    if user == None: return None # Если пользователя не существует
-    user = user[0]
-    return (user['first_name'] + ' ' + user['last_name'])#.encode('utf-8') # Если проблемы с кодировкой - надо убрать "ecnode("utf-8")"
-
-def isCanKick(vk, user_id, chat_id, NoCheckIN = False):
-    ''' Проверка, можно ли выгнать пользователях
-
-        :param vk: Объект сессии ВК
-        :param user_id: id пользователя
-        :param chat_id: id беседы ВК
-        :param NoCheckIN: Нужно ли проверять на наличие в беседе (False если нужно)
-
-        :return: True если можно кикнуть | False если нельзя
-    '''
-    if NoCheckIN or isUserInConversation(vk, user_id, chat_id): # Поиск в беседе пользователя. Если найден - продолжаем
-        if not(isAdmin(vk, getUser(vk,user_id)[0]['id'], chat_id)): # Если пользователь - не админ, продолжаем
-            if not(user_id in nokick):
-                return True
-            else:
-                user_message = '[VOTEBAN] Не могу выгнать этого пользователя'
-        else:
-            user_message = '[VOTEBAN] Ошибка: Пользователь является администратором'
-    else:
-        user_message = '[VOTEBAN] Ошибка: Пользователь не в беседе'
-    writeMessage(vk, chat_id, user_message)
-    return False
-
-# ------------------- CONVERSATIONS ---------------------------------
-def isUserInConversation(vk, user_id, chat_id):
-    ''' Проверяем, находится ли пользователь с id = userid в чате с id = chat_id
-
-        :param vk: Объект сессии вк
-        :param user_id: id пользователя
-        :param chat_id: id беседы ВК
-
-        :return: True, если пользователь в беседе | False, если не в беседе
-    '''
-    user = getUser(vk,user_id) # Получаем объект пользователя
-
-    if not user: # Пользователя не существует
-        return False
-
-    id = user[0]['id']
-
-    if not id: # ID не существует
-        return False
-
-    # Получаем информацию о пользователях беседы
-    try:
-        chatMembers = vk.method('messages.getConversationMembers', {'peer_id': 2000000000+chat_id})
-    except:
-        return False
-
-    try:
-        for member in chatMembers['items']: # Перебираем пользоваетелей беседы
-            if member['member_id'] == id:
-                return True # Пользователь найден в беседе
-        return False
-    except:
-        print(member)
-
-def getUsersCount(vk, chat_id):
-    ''' Получаем число участников беседы
-
-        :param vk: Объект сессии ВК
-        :param chat_id: id беседы ВК
-
-        :return: [int] Число_участников
-    '''
-    # Получаем информацию о пользователях беседы
-    chatMembers = vk.method('messages.getConversationMembers', {'peer_id': 2000000000+chat_id})
-    return chatMembers['count']
-
-def isAdmin(vk, user_id, chat_id):
-    ''' Проверяем, является ли пользователь администратором
-
-        :param vk: Объект сессии ВК
-        :param user_id: id пользователя (Не screen_id)
-
-        :return: True, если админ | False, если не админ
-    '''
-
-    # Получаем информацию о пользователях беседы
-    chatMembers = vk.method('messages.getConversationMembers', {'peer_id': 2000000000+chat_id})
-    for member in chatMembers['items']: # Перебираем пользоваетелей беседы
-        if member['member_id'] == user_id:
-            return member.get('is_admin', False)
 
 #  ----------------------------- KICK LIST -----------------------------------------
 
@@ -243,45 +102,20 @@ def voiceProcessing(event, kick_list,vk,element, ind):
 
         :NoReturn:
     '''
-    user = getUser(vk, element['id']) # Получаем объект пользоваетля
+    user = users.getUser(vk, element['id']) # Получаем объект пользоваетля
     if not(event.user_id == user[0]['id']): # Если пользователь не голосует сам за себяя
         if not (event.user_id in element['voted']): # Если пользователь еще не голосовал
             element['voted'].add(event.user_id) # Заносим пользователя в множество проголосовавших
             element[ind] += 1 # Увеличиваем количество голосов за/против (В зависимости от выбора пользователя)
 
             # Формируем и отправляем сообщения о голосе
-            user_message = vote_message.format(str(element['count_yes']),str(element['count_no']))
+            user_message = bot_msg.vote_accepted.format(str(element['count_yes']),str(element['count_no']))
             writeMessage(vk, event.chat_id, user_message)
         print(kick_list)
     else:
-        user_message = '[VOTEBAN] Ошибка: Нельзя голосовать самому за себя!'
-        writeMessage(vk, event.chat_id, user_message)
+        writeMessage(vk, event.chat_id, bot_msg.err_vote_for_yourself)
 
-# ---------------------------- VK API ---------------------------------
-def writeMessage(vk, chat_id, message):
-    ''' Вывод сообщения в чат
 
-        :param vk: Объект сессии ВК
-        :param chat_id: id беседы ВК
-        :param message: Сообщение, которое надо вывести
-
-        :NoReturn:
-    '''
-    vk.method('messages.send', {'chat_id':chat_id, 'message': message})
-
-def kickUser(vk, chat_id, user_id):
-    ''' Выгоняет пользователя из беседы
-
-        :param vk: Объект сессии ВК
-        :param user_id: id пользователях
-        :param chat_id: id беседы ВК
-
-        :NoReturn:
-    '''
-    try:
-        vk.method('messages.removeChatUser', {'chat_id': chat_id, 'user_id':getUser(vk,user_id)[0]['id']})
-    except:
-        writeMessage(vk, chat_id, '[VOTEBAN] Не могу выгнать пользователя. Скорее всего, меня лишили прав администратора')
 
 # --------------------------- FILES ----------------------------------
 def saveListToFile(my_list,file):
@@ -292,7 +126,7 @@ def saveListToFile(my_list,file):
 
         :NoReturn:
     '''
-    f = open(file_name, 'w')
+    f = open(const.file_name, 'w')
     f.write(json.dumps(my_list))
     f.close()
 
@@ -317,7 +151,7 @@ def antispam(event,spamlist):
     else:
         spamlist.append({'id': event.user_id,'chat_id':event.chat_id, 'text': event.text.split()}) #добавляем новое
         #  сообщение в спам-лист (на всякий, вдруг юзверь долбаеб)
-        timer = threading.Timer(spam_time, deletespamlist,[event,spamlist]) #ставим таймер на удаление из спсика (многопоточно)
+        timer = threading.Timer(const.spam_time, deletespamlist,[event,spamlist]) #ставим таймер на удаление из спсика (многопоточно)
         timer.start()
         return True
 
@@ -336,11 +170,11 @@ def unbanUser(vk,user_id, banlist, chat_id):
     for i, element in enumerate(banlist): # Перебируем список заблокированных
         if element['id'] == user_id and element['chat'] == chat_id: # Нашли
             del banlist[i] # Удаляем элемент списка
-            userName = getName(vk, user_id)
-            user_message = '[VOTEBAN] Я разбанил {0}. Можете его возвращать в беседу'.format(userName)
+            userName = users.getName(vk, user_id)
+            user_message = bot_msg.unban_user.format(userName)
             break
     else:
-        user_message = '[VOTEBAN] Ошибка: Такого юзера нету в бан-листе...'
+        user_message = bot_msg.no_user_in_banlist
     writeMessage(vk,chat_id,user_message)
 
 def checkForBan(vk, needkick, event):
@@ -351,9 +185,9 @@ def checkForBan(vk, needkick, event):
         :param event: Событие LongPoll: Новое сообщение
     '''
     for el in needkick:
-        if isUserInConversation(vk,el['id'], event.chat_id) and (el['chat'] == event.chat_id):
+        if chats.isUserInConversation(vk,el['id'], event.chat_id) and (el['chat'] == event.chat_id):
         # Пользователь ливнул во время голосования и вернулся
-            writeMessage(vk, event.chat_id, '[VOTEBAN] Ну вот мы и встретились...')
+            writeMessage(vk, event.chat_id, bot_msg.banned_user_came_in)
             kickUser(vk, event.chat_id, el['id'])
 
 # ------------------------------ HANDLERS -------------------------------------------
@@ -372,25 +206,25 @@ def finishVote(vk, chat_id, kick_list, needkick):
     kick_info = searchKickList(kick_list, chat_id)
 
     # Генерируем и отправляем сообщение о завершении голосования
-    message = finish_message.format(getName(vk, kick_info['id']),kick_info['count_yes'],kick_info['count_no'])
+    message = bot_msg.finish_vote.format(users.getName(vk, kick_info['id']),kick_info['count_yes'],kick_info['count_no'])
     writeMessage(vk, chat_id, message)
 
     try: # Если возникло исключение => бота кикнули из беседы
-        if (len(kick_info['voted']) >= vote_count) and (kick_info['count_yes'] > kick_info['count_no']):
-            if(isUserInConversation(vk,kick_info['id'], chat_id)): # Если пользователь все еще в беседе
-                writeMessage(vk, chat_id, '[VOTEBAN] Пользователь исключен')
+        if (len(kick_info['voted']) >= const.vote_count) and (kick_info['count_yes'] > kick_info['count_no']):
+            if(chats.isUserInConversation(vk,kick_info['id'], chat_id)): # Если пользователь все еще в беседе
+                writeMessage(vk, chat_id, bot_msg.user_excluded)
                 # Исключаем пользователя
                 kickUser(vk, chat_id, kick_info['id'])
             else: # Пользователь ливнул во время голосования
-                writeMessage(vk,chat_id, '[VOTEBAN] Этот говнюк ливнул. Зайдет - кикну')
+                writeMessage(vk,chat_id, bot_msg.user_leave)
 
             needkick.append({'id':kick_info['id'], 'chat': chat_id}) # Добавляем пользователя в список заблокированных
 
-        elif len(kick_info['voted']) < vote_count:
-            writeMessage(vk, chat_id, '[VOTEBAN] Не набрано достаточное количетсво голосов (Набрано: {0}, необходимо: {1}).\nТак что пользователь остается в беседе... Пока что...'.format(len(kick_info['voted']), vote_count))
+        elif len(kick_info['voted']) < const.vote_count:
+            writeMessage(vk, chat_id, bot_msg.no_votes_cast.format(len(kick_info['voted']), const.vote_count))
         else:
-            writeMessage(vk, chat_id, '[VOTEBAN] Пользователь остается в беседе... Пока что...')
-    except:
+            writeMessage(vk, chat_id, bot_msg.user_remains)
+    except ApiError:
         print('Меня кикнули(')
 
     kick_list.pop(find_delete(kick_list,chat_id)) # Извлекаем из очереди на кик
@@ -406,7 +240,7 @@ def onTimerSave(file):
     global needkick
     saveListToFile(needkick, file)
     print('Сохранение в файл..')
-    saveTimer = threading.Timer(backups_time*60, onTimerSave, [file])
+    saveTimer = threading.Timer(const.backups_time*60, onTimerSave, [file])
     saveTimer.start()
 
 def checkFriend(vk):
@@ -424,7 +258,7 @@ def checkFriend(vk):
     for id in obj['items']: # перебираем все заявки
          vk.method('friends.add', {'user_id': id, 'follow': 0}) # добавляем в друзья
          print(id, 'added')
-    friendTimer = threading.Timer(friends_time*60, checkFriend, [vk]) # проверка на наличе новых друзей каждый час
+    friendTimer = threading.Timer(const.friends_time*60, checkFriend, [vk]) # проверка на наличе новых друзей каждый час
     friendTimer.start()
 
 
@@ -471,13 +305,13 @@ def main():
     print(kick_list)
 
 
-    saveTimer = threading.Timer(backups_time*60, onTimerSave, [file_name])
+    saveTimer = threading.Timer(const.backups_time*60, onTimerSave, [const.file_name])
     saveTimer.start()
 
     try:
-        f = open(file_name, 'r')
+        f = open(const.file_name, 'r')
     except FileNotFoundError:
-        open(file_name, 'w')
+        open(const.file_name, 'w')
         needkick = []
     else:
         needkick = json.loads(f.readline())
@@ -518,43 +352,41 @@ def main():
 
 
                 if (len(answer) == 2) and (answer[0].lower() == '!voteban'): # если сообщение из двух строк и первое - служебное !voteban
-                    if not(isAdmin(vk_session, my_id, chat_id)): # Если бот не является админом
-                        user_message = '[VOTEBAN] Ошибка: У меня нет прав администратора'
-                        writeMessage(vk_session, chat_id, user_message)
+                    if not(chats.isAdmin(vk_session, my_id, chat_id)): # Если бот не является админом
+                        writeMessage(vk_session, chat_id, bot_msg.no_admin_rights)
                     else:
                         if searchKickList(kick_list,chat_id) == None:
                             user_id = answer[1]
-                            user = getName(vk_session, user_id) # Получаем информацию о пользователе
-                            if isCanKick(vk_session, user_id, chat_id):
+                            user = users.getName(vk_session, user_id) # Получаем информацию о пользователе
+                            if users.isCanKick(vk_session, user_id, chat_id):
                                 try:
                                     test = int(user_id)
                                 except ValueError:
                                     'FullID'
                                 else:
                                     user_id = 'id' + user_id
-                                user_message = startvote_message.format(user_id, user, vote_time, vote_count)
+                                user_message = bot_msg.start_vote.format(user_id, user, const.vote_time, const.vote_count)
                                 kick_list.append(AddKickMan(vk_session,user_id,chat_id)) # Добавляем в список очереди на кик
 
-                                timer = threading.Timer(60*vote_time, finishVote, [vk_session, chat_id, kick_list, needkick])
+                                timer = threading.Timer(60*const.vote_time, finishVote, [vk_session, chat_id, kick_list, needkick])
                                 timer.start()
                                 writeMessage(vk_session, chat_id, user_message)
                         else:
-                            user_message = '[VOTEBAN] Ошибка: Голосвание уже идет.'
+                            user_message = bot_msg.voting_is_active
                             writeMessage(vk_session, chat_id, user_message)
 
                 if (len(answer) == 1) and ((answer[0].lower() == '!votehelp') or (answer[0].lower() == '!voteban')):
-                    message = help_message.format(vote_time, vote_count)
+                    message = bot_msg.help.format(const.vote_time, const.vote_count)
                     writeMessage(vk_session, chat_id , message)
-                if (len(answer) == 1) and (answer[0] in kick_commands) and searchKickList(kick_list, chat_id):
+                if (len(answer) == 1) and (answer[0] in const.kick_commands) and searchKickList(kick_list, chat_id):
                     voiceProcessing(event,kick_list,vk_session,searchKickList(kick_list,event.chat_id),'count_yes')
 
-                if (len(answer) == 1) and (answer[0] in anti_kick_commands) and searchKickList(kick_list, chat_id):
+                if (len(answer) == 1) and (answer[0] in const.anti_kick_commands) and searchKickList(kick_list, chat_id):
                     voiceProcessing(event,kick_list,vk_session, searchKickList(kick_list, event.chat_id),'count_no')
 
                 if (len(answer) == 2) and (answer[0].lower() == '!unban'):
-                    if not (isAdmin(vk_session, event.user_id, chat_id)):
-                        user_message = '[VOTEBAN] Ошибка: Вы не администратор.'
-                        writeMessage(vk_session, event.chat_id, user_message)
+                    if not (chats.isAdmin(vk_session, event.user_id, chat_id)):
+                        writeMessage(vk_session, event.chat_id, bot_msg.you_are_not_admin)
                     else:
                         user_id = answer[1]
                         unbanUser(vk_session,user_id,needkick,event.chat_id)
@@ -565,26 +397,24 @@ def main():
                        # user_message =
                         for element in needkick:
                             if element['chat'] == event.chat_id:
-                                user_message += '* {0} [{1}] \n'.format(str(getName(vk_session,element['id'],'nom')), element['id'])
+                                user_message += '* {0} [{1}] \n'.format(str(users.getName(vk_session,element['id'],'nom')), element['id'])
                         if len(user_message) != 0:
-                            mem = '[VOTEBAN] СПИСОК ЗАБАНЕННЫХ ПОЛЬЗОВАТЕЛЕЙ: \n\n' + user_message
+                            mem = bot_msg.banned_list + user_message
                         else:
-                            mem = '[VOTEBAN]  Бан-лист пуст.'
+                            mem = bot_msg.banlist_empty
                         writeMessage(vk_session, event.chat_id, mem)
                     else:
-                        user_message = '[VOTEBAN]  Бан-лист пуст.'
-                        writeMessage(vk_session, event.chat_id, user_message)
+                        writeMessage(vk_session, event.chat_id, bot_msg.banlist_empty)
 
                 if (len(answer) == 2) and (answer[0].lower() == '!addbanlist'):
-                    if not (isAdmin(vk_session, event.user_id, chat_id)):
-                        user_message = '[VOTEBAN] Ошибка: Вы не администратор.'
-                        writeMessage(vk_session, event.chat_id, user_message)
+                    if not (chats.isAdmin(vk_session, event.user_id, chat_id)):
+                        writeMessage(vk_session, event.chat_id, bot_msg.you_are_not_admin)
                     else:
                         user_id = answer[1]
-                        if isCanKick(vk_session, user_id, event.chat_id, True):
-                            writeMessage(vk_session, chat_id, '[VOTEBAN] Пользователь добавлен в бан-лист.')
+                        if users.isCanKick(vk_session, user_id, event.chat_id, True):
+                            writeMessage(vk_session, chat_id, bot_msg.user_added_in_banlist)
                             needkick.append({'id': user_id, 'chat': event.chat_id})
-                            if isUserInConversation(vk_session,user_id,event.chat_id):
+                            if chats.isUserInConversation(vk_session,user_id,event.chat_id):
                                 checkForBan(vk_session, needkick, event)
 
 try:
@@ -599,11 +429,11 @@ except Exception as error_msg:
     print(error_msg, file = f)
     f.close()
     print(needkick)
-    saveListToFile(needkick, file_name)
+    saveListToFile(needkick, const.file_name)
     print("I'm finishing my work ...")
     main() # Произошло исключение - пробуем вернуться к работе
 else:
-    saveListToFile(needkick, file_name)
+    saveListToFile(needkick, const.file_name)
     print("I'm finishing my work ...")
 
 print(needkick)
