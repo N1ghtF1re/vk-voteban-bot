@@ -450,9 +450,7 @@ def main():
                     now = int(time.time()) # Текущее время
                     delta = now - start_date # Разница во времени
                     writeMessage(vk_session, event.chat_id, bot_msg.my_uptime + formatDeltaTime(delta))
-if __name__ == '__main__':
-    main()
-'''
+
 try:
     if __name__ == '__main__':
         main()
@@ -471,5 +469,5 @@ except Exception as error_msg:
 else:
     saveListToFile(needkick, const.file_name)
     print("I'm finishing my work ...")
-'''
+
 print(needkick)
