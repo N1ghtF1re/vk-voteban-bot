@@ -41,7 +41,9 @@ You can also edit the constants in const.py (the time of voting, the number of v
 + !voteban USER_ID - create a poll. The user ID is in his link after vk.com/. Voting takes 5 minutes. The conditions for exclusion: more than 5 participants in the conversation voted, more "placet" than "against";
 + !votehelp - Help with using the bot;
 + !banlist - View the blocked users in this conversation;
++ !uptime - bot's uptime
 + !unban USER_ID [ONLY FOR ADMINISTRATORS] to unlock the user.
++ !addinbanlist USER_ID [ONLY FOR ADMINISTRATORS] to force the user to add a banlist.
 
 ## Developers
 In the development of this bot involved:
@@ -79,8 +81,10 @@ python bot.py
 # Команды бота
 + !voteban ID_ПОЛЬЗОВАТЕЛЯ - создать голосование. ID пользователя находится в его ссылке после vk.com/. Голосование длится 5 минут. Условия исключения: голосовало более 5 участников беседы, голосов "за" набрано больше, чем "против"; 
 + !votehelp - Помощь по использованию бота; 
-+ !banlist - Просмотреть заблокированных в этой беседе пользоваетелей ;
-+ !unban ID_ПОЛЬЗОВАТЕЛЯ [ТОЛЬКО ДЛЯ АДМИНИСТРАТОРОВ БЕСЕДЫ] - разблокировать пользователя. 
++ !banlist - Просмотреть заблокированных в этой беседе пользоваетелей;
++ !uptime - Время работы бота;
++ !unban ID_ПОЛЬЗОВАТЕЛЯ [ТОЛЬКО ДЛЯ АДМИНИСТРАТОРОВ БЕСЕДЫ] - разблокировать пользователя;
++ !addinbanlist ID_ПОЛЬЗОВАТЕЛЯ [ТОЛЬКО ДЛЯ АДМИНИСТРАТОРОВ БЕСЕДЫ] - принудительно добавить пользователя в бан-лист.
 
 ## Разработчики
 В разработке этого бота участвовали:
