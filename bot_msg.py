@@ -56,3 +56,5 @@ banned_list = prefix + 'СПИСОК ЗАБАНЕННЫХ ПОЛЬЗОВАТЕЛ
 banlist_empty = prefix + 'Бан-лист пуст.'
 
 user_added_in_banlist = prefix + 'Пользователь добавлен в бан-лист.'
+
+user_already_in_banlist = prefix + 'Ошибка: Пользователь уже в бан-листе'

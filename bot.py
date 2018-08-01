@@ -199,8 +199,21 @@ def addBanList(vk, needkick, user_id, chat_id):
     '''
 
     id = users.getUser(vk,user_id)['id']
-    needkick.append({'id': id, 'chat': chat_id})
+    if isUserInBanList(needkick, id, chat_id): # Если пользователь уже в бан-листе
+        writeMessage(vk, chat_id, bot_msg.user_already_in_banlist)
+    else:
+        needkick.append({'id': id, 'chat': chat_id})
+        writeMessage(vk, chat_id, bot_msg.user_added_in_banlist)
 
+def isUserInBanList(needkick, user_id, chat_id):
+    ''' Проверяет наличие пользователя в бан-листе чата
+        :param needkick: Бан-лист
+        :user_id: ID пользователя
+        :chat_id: ID беседы ВК
+
+        return [] если нет в списке, [...] если есть
+    '''
+    return list(filter(lambda ban_dict: (ban_dict['id'] == user_id) and (ban_dict['chat'] == chat_id), needkick) )
 
 # ------------------------------ HANDLERS -------------------------------------------
 
@@ -401,7 +414,7 @@ def main():
                        # user_message =
                         for element in needkick:
                             if element['chat'] == event.chat_id:
-                                user_message += '* {0} [{1}] \n'.format(str(users.getName(vk_session,element['id'],'nom')), element['id'])
+                                user_message += '* [id{1}|{0}] [id{1}] \n'.format(str(users.getName(vk_session,element['id'],'nom')), element['id'])
                         if len(user_message) != 0:
                             mem = bot_msg.banned_list + user_message
                         else:
@@ -416,7 +429,6 @@ def main():
                     else:
                         user_id = answer[1]
                         if users.isCanKick(vk_session, user_id, event.chat_id, True):
-                            writeMessage(vk_session, chat_id, bot_msg.user_added_in_banlist)
                             addBanList(vk_session, needkick, user_id, event.chat_id)
                             if chats.isUserInConversation(vk_session,user_id,event.chat_id):
                                 checkForBan(vk_session, needkick, event)
