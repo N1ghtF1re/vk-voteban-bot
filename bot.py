@@ -437,7 +437,7 @@ def main():
                     else:
                         writeMessage(vk_session, event.chat_id, bot_msg.banlist_empty)
 
-                if (len(answer) == 2) and (answer[0].lower() == '!addbanlist'):
+                if (len(answer) == 2) and (answer[0].lower() == '!addinbanlist'):
                     if not (chats.isAdmin(vk_session, event.user_id, chat_id)):
                         writeMessage(vk_session, event.chat_id, bot_msg.you_are_not_admin)
                     else:
