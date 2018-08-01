@@ -10,7 +10,7 @@ from units import chats
 import bot_msg
 import const
 
-def getUser(vk, user_id, name_case = 'gen'):
+def getUser(vk, user_id, name_case = 'acc'):
     ''' Получаем информацию о пользователе с id = id
 
         :param vk: Объект сессии ВК
