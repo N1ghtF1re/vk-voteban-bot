@@ -19,8 +19,6 @@ from python3_anticaptcha import errors
 
 from config import login,password,my_id,isUsedAntiCaptcha, antiCaptchaKey
 
-import sys
-
 # UNITS:
 import const
 import bot_msg
@@ -46,7 +44,7 @@ spam_list = []
 
 #  ----------------------------- KICK LIST -----------------------------------------
 
-def AddKickMan(vk, user_id, chat_id,county=0,countn=0):
+def addKickMan(vk, user_id, chat_id,county=0,countn=0):
     ''' Генерация словаря для списка претендентов на кик
 
         :param vk: Объект сессии ВК
@@ -103,7 +101,7 @@ def voiceProcessing(event, kick_list,vk,element, ind):
         :NoReturn:
     '''
     user = users.getUser(vk, element['id']) # Получаем объект пользоваетля
-    if not(event.user_id == user[0]['id']): # Если пользователь не голосует сам за себяя
+    if not(event.user_id == user['id']): # Если пользователь не голосует сам за себяя
         if not (event.user_id in element['voted']): # Если пользователь еще не голосовал
             element['voted'].add(event.user_id) # Заносим пользователя в множество проголосовавших
             element[ind] += 1 # Увеличиваем количество голосов за/против (В зависимости от выбора пользователя)
@@ -167,8 +165,9 @@ def unbanUser(vk,user_id, banlist, chat_id):
 
         :NoReturn:
     '''
+    id = users.getUser(vk,user_id)['id']
     for i, element in enumerate(banlist): # Перебируем список заблокированных
-        if element['id'] == user_id and element['chat'] == chat_id: # Нашли
+        if element['id'] == id and element['chat'] == chat_id: # Нашли
             del banlist[i] # Удаляем элемент списка
             userName = users.getName(vk, user_id)
             user_message = bot_msg.unban_user.format(userName)
@@ -189,6 +188,19 @@ def checkForBan(vk, needkick, event):
         # Пользователь ливнул во время голосования и вернулся
             writeMessage(vk, event.chat_id, bot_msg.banned_user_came_in)
             kickUser(vk, event.chat_id, el['id'])
+
+def addBanList(vk, needkick, user_id, chat_id):
+    ''' Добавляет пользователя в бан-лист
+
+        :vk: Объект сессии ВК
+        :param needkick: Бан-лист
+        :user_id: ID пользователя
+        :chat_id: ID беседы ВК
+    '''
+
+    id = users.getUser(vk,user_id)['id']
+    needkick.append({'id': id, 'chat': chat_id})
+
 
 # ------------------------------ HANDLERS -------------------------------------------
 
@@ -217,8 +229,7 @@ def finishVote(vk, chat_id, kick_list, needkick):
                 kickUser(vk, chat_id, kick_info['id'])
             else: # Пользователь ливнул во время голосования
                 writeMessage(vk,chat_id, bot_msg.user_leave)
-
-            needkick.append({'id':kick_info['id'], 'chat': chat_id}) # Добавляем пользователя в список заблокированных
+            addBanList(vk, needkick, kick_info['id'], chet_id)
 
         elif len(kick_info['voted']) < const.vote_count:
             writeMessage(vk, chat_id, bot_msg.no_votes_cast.format(len(kick_info['voted']), const.vote_count))
@@ -297,16 +308,11 @@ def deletespamlist(event,spamlist):
 # ------------------------ MAIN DEF -------------------------------------------
 
 def main():
-
     print("I'm starting my work ...")
     global needkick
     global kick_list
     print('Kick list: ', end='')
     print(kick_list)
-
-
-    saveTimer = threading.Timer(const.backups_time*60, onTimerSave, [const.file_name])
-    saveTimer.start()
 
     try:
         f = open(const.file_name, 'r')
@@ -316,6 +322,10 @@ def main():
     else:
         needkick = json.loads(f.readline())
         f.close()
+
+    saveTimer = threading.Timer(const.backups_time*60, onTimerSave, [const.file_name])
+    saveTimer.start()
+
     if isUsedAntiCaptcha:
         vk_session = vk_api.VkApi(login, password, captcha_handler=captcha_handler)
     else:
@@ -330,20 +340,14 @@ def main():
     checkFriend(vk_session) # Ежечасовая проверка друзей
 
     longpoll = VkLongPoll(vk_session)
-    count = 0
     for event in longpoll.listen(): # События VkLongPoll
 
-        if event.type == VkEventType.CHAT_EDIT:
+        if event.type == VkEventType.CHAT_EDIT: # Кто-то вошел/вышел/изменил название беседы
             print(needkick)
             checkForBan(vk_session, needkick, event)
 
 
         if (event.type == VkEventType.MESSAGE_NEW) and event.from_chat: # Событие: новое сообщение в чате
-            '''
-            print('Message: ', event.user_id, ' in ', event.chat_id)
-            print('>>> ' + event.text)
-            '''
-
             if antispam(event,spam_list):
 
                 answer = event.text.split() # Отправленное юзверем сообщение
@@ -366,7 +370,7 @@ def main():
                                 else:
                                     user_id = 'id' + user_id
                                 user_message = bot_msg.start_vote.format(user_id, user, const.vote_time, const.vote_count)
-                                kick_list.append(AddKickMan(vk_session,user_id,chat_id)) # Добавляем в список очереди на кик
+                                kick_list.append(addKickMan(vk_session,user_id,chat_id)) # Добавляем в список очереди на кик
 
                                 timer = threading.Timer(60*const.vote_time, finishVote, [vk_session, chat_id, kick_list, needkick])
                                 timer.start()
@@ -413,10 +417,12 @@ def main():
                         user_id = answer[1]
                         if users.isCanKick(vk_session, user_id, event.chat_id, True):
                             writeMessage(vk_session, chat_id, bot_msg.user_added_in_banlist)
-                            needkick.append({'id': user_id, 'chat': event.chat_id})
+                            addBanList(vk_session, needkick, user_id, event.chat_id)
                             if chats.isUserInConversation(vk_session,user_id,event.chat_id):
                                 checkForBan(vk_session, needkick, event)
-
+if __name__ == '__main__':
+    main()
+'''
 try:
     if __name__ == '__main__':
         main()
@@ -426,7 +432,7 @@ except Exception as error_msg:
     except IOError:
         f = open('error.log', 'w')
     print(str(datetime.now()), file=f, end=' ')
-    print(error_msg, file = f)
+    print(error_msg, file = f, end='\n')
     f.close()
     print(needkick)
     saveListToFile(needkick, const.file_name)
@@ -435,5 +441,5 @@ except Exception as error_msg:
 else:
     saveListToFile(needkick, const.file_name)
     print("I'm finishing my work ...")
-
+'''
 print(needkick)

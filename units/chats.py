@@ -23,7 +23,7 @@ def isUserInConversation(vk, user_id, chat_id):
     if not user: # Пользователя не существует
         return False
 
-    id = user[0]['id']
+    id = user['id']
 
     if not id: # ID не существует
         return False
@@ -34,13 +34,10 @@ def isUserInConversation(vk, user_id, chat_id):
     except:
         return False
 
-    try:
-        for member in chatMembers['items']: # Перебираем пользоваетелей беседы
-            if member['member_id'] == id:
-                return True # Пользователь найден в беседе
-        return False
-    except:
-        print(member)
+    for member in chatMembers['items']: # Перебираем пользоваетелей беседы
+        if member['member_id'] == id:
+            return True # Пользователь найден в беседе
+    return False
 
 def getUsersCount(vk, chat_id):
     ''' Получаем число участников беседы
