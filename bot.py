@@ -190,13 +190,16 @@ def checkForBan(vk, needkick, event):
             writeMessage(vk, event.chat_id, bot_msg.banned_user_came_in)
             kickUser(vk, event.chat_id, el['id'])
 
-def addBanList(vk, needkick, user_id, chat_id):
+def addBanList(vk, needkick, user_id, chat_id, isWrite = false):
     ''' Добавляет пользователя в бан-лист
 
-        :vk: Объект сессии ВК
+        :param vk: Объект сессии ВК
         :param needkick: Бан-лист
-        :user_id: ID пользователя
-        :chat_id: ID беседы ВК
+        :param user_id: ID пользователя
+        :param chat_id: ID беседы ВК
+        :param isWrite: Отображать ли сообщение о добавлении в бан-лист
+
+        :NoReturn:
     '''
 
     id = users.getUser(vk,user_id)['id']
@@ -204,13 +207,14 @@ def addBanList(vk, needkick, user_id, chat_id):
         writeMessage(vk, chat_id, bot_msg.user_already_in_banlist)
     else:
         needkick.append({'id': id, 'chat': chat_id})
-        writeMessage(vk, chat_id, bot_msg.user_added_in_banlist)
+        if isWrite:
+            writeMessage(vk, chat_id, bot_msg.user_added_in_banlist)
 
 def isUserInBanList(needkick, user_id, chat_id):
     ''' Проверяет наличие пользователя в бан-листе чата
         :param needkick: Бан-лист
-        :user_id: ID пользователя
-        :chat_id: ID беседы ВК
+        :param user_id: ID пользователя
+        :param chat_id: ID беседы ВК
 
         return [] если нет в списке, [...] если есть
     '''
@@ -443,7 +447,7 @@ def main():
                     else:
                         user_id = answer[1]
                         if users.isCanKick(vk_session, user_id, event.chat_id, True):
-                            addBanList(vk_session, needkick, user_id, event.chat_id)
+                            addBanList(vk_session, needkick, user_id, event.chat_id, True)
                             if chats.isUserInConversation(vk_session,user_id,event.chat_id):
                                 checkForBan(vk_session, needkick, event)
                 if (len(answer) == 1) and (answer[0].lower() == '!uptime'):
