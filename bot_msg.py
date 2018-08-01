@@ -58,3 +58,6 @@ banlist_empty = prefix + 'Бан-лист пуст.'
 user_added_in_banlist = prefix + 'Пользователь добавлен в бан-лист.'
 
 user_already_in_banlist = prefix + 'Ошибка: Пользователь уже в бан-листе'
+
+my_uptime = prefix + 'UPTIME: \n'
+time_format = '{0} дней, {1} часов, {2} минут, {3} секунд'

@@ -28,6 +28,6 @@ def kickUser(vk, chat_id, user_id):
         :NoReturn:
     '''
     try:
-        vk.method('messages.removeChatUser', {'chat_id': chat_id, 'user_id':users.getUser(vk,user_id)[0]['id']})
+        vk.method('messages.removeChatUser', {'chat_id': chat_id, 'user_id':users.getUser(vk,user_id)['id']})
     except:
         writeMessage(vk, chat_id, bot_msg.no_rights_for_kicks)

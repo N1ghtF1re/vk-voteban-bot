@@ -9,10 +9,12 @@
 
 import threading
 import json
-from datetime import datetime
+
 
 import vk_api
 from vk_api.longpoll import VkLongPoll, VkEventType
+
+import time
 
 from python3_anticaptcha import ImageToTextTask
 from python3_anticaptcha import errors
@@ -34,7 +36,7 @@ needkick = [] # Пользователи в ЧС беседы. Формат: [{'
 
 
 ''' Список претендентов на кик.
-    Формат: [{'id': [str],'chat_id': [int], 'time': [str], 'voted': set(), 'count_yes': [int], 'count_no': [int]}, {...}]
+    Формат: [{'id': [str],'chat_id': [int], 'voted': set(), 'count_yes': [int], 'count_no': [int]}, {...}]
 
     Особенность: в данном списке может находиться только один элемент для каждой беседы
 '''
@@ -56,9 +58,8 @@ def addKickMan(vk, user_id, chat_id,county=0,countn=0):
         :return: [dict] {'id': [str],'chat_id': [int], 'time': [str], 'voted': set(), 'count_yes': [int], 'count_no': [int]}
 
     '''
-    time = str(datetime.now().hour)+':'+str(datetime.now().minute) # Текущее время
     mem = set()
-    dic = {'id': user_id,'chat_id': chat_id, 'time': time, 'voted': mem, 'count_yes': county, 'count_no': countn}
+    dic = {'id': user_id,'chat_id': chat_id, 'voted': mem, 'count_yes': county, 'count_no': countn}
     return dic
 
 def searchKickList(kick_list, chat_id):
@@ -242,13 +243,13 @@ def finishVote(vk, chat_id, kick_list, needkick):
                 kickUser(vk, chat_id, kick_info['id'])
             else: # Пользователь ливнул во время голосования
                 writeMessage(vk,chat_id, bot_msg.user_leave)
-            addBanList(vk, needkick, kick_info['id'], chet_id)
+            addBanList(vk, needkick, kick_info['id'], chat_id)
 
         elif len(kick_info['voted']) < const.vote_count:
             writeMessage(vk, chat_id, bot_msg.no_votes_cast.format(len(kick_info['voted']), const.vote_count))
         else:
             writeMessage(vk, chat_id, bot_msg.user_remains)
-    except ApiError:
+    except vk_api.ApiError:
         print('Меня кикнули(')
 
     kick_list.pop(find_delete(kick_list,chat_id)) # Извлекаем из очереди на кик
@@ -317,11 +318,24 @@ def deletespamlist(event,spamlist):
             break
 
 
+# ADDITIONAL DEFS:
+def formatDeltaTime(dt):
+    ''' Форматирует разницу во времени из количества секунд в строковое представление
 
+    :param dt: Разница во времени в секундах
+
+    :return: [str] '{0} дней, {1} часов, {2} минут, {3} секунд'
+    '''
+    d = divmod(dt,86400)  # days
+    h = divmod(d[1],3600)  # hours
+    m = divmod(h[1],60)  # minutes
+    s = m[1]  # seconds
+    return bot_msg.time_format.format(d[0],h[0],m[0],s)
 # ------------------------ MAIN DEF -------------------------------------------
 
 def main():
     print("I'm starting my work ...")
+    start_date = int(time.time()) # Секунд с начала эпохи
     global needkick
     global kick_list
     print('Kick list: ', end='')
@@ -432,6 +446,10 @@ def main():
                             addBanList(vk_session, needkick, user_id, event.chat_id)
                             if chats.isUserInConversation(vk_session,user_id,event.chat_id):
                                 checkForBan(vk_session, needkick, event)
+                if (len(answer) == 1) and (answer[0].lower() == '!uptime'):
+                    now = int(time.time()) # Текущее время
+                    delta = now - start_date # Разница во времени
+                    writeMessage(vk_session, event.chat_id, bot_msg.my_uptime + formatDeltaTime(delta))
 if __name__ == '__main__':
     main()
 '''
