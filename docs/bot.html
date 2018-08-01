@@ -1,0 +1,162 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html><head><title>Python: module bot</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head><body bgcolor="#f0f0f8">
+
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="heading">
+<tr bgcolor="#7799ee">
+<td valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong>bot</strong></big></big></font></td
+><td align=right valign=bottom
+><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:d%3A%5Cvoteban-bot%5Cbot.py">d:\voteban-bot\bot.py</a></font></td></tr></table>
+    <p><tt>VOTEBAN&nbsp;BOT<br>
+:authors:&nbsp;Alexandr&nbsp;Pankratiew,&nbsp;Alexey&nbsp;Shilo<br>
+:contact:&nbsp;https://vk.com/sasha_pankratiew,&nbsp;https://vk.com/alexey_shilo<br>
+:githubs:&nbsp;https://github.com/N1ghtF1re,&nbsp;https://github.com/AlexeyLyapeshkin<br>
+:copyright:&nbsp;(c)&nbsp;2018</tt></p>
+<p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#aa55cc">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Modules</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="units.users.html">units.users</a><br>
+<a href="units.chats.html">units.chats</a><br>
+
+</td><td width="25%" valign=top><a href="const.html">const</a><br>
+<a href="bot_msg.html">bot_msg</a><br>
+</td><td width="25%" valign=top><a href="units.vkapi.html">units.vkapi</a><br>
+<a href="bot.html">bot</a><br>
+<br>
+</td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#eeaa77">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Functions</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl><dt><a name="-addBanList"><strong>addBanList</strong></a>(vk, needkick, user_id, chat_id, isWrite=False)</dt><dd><tt>Добавляет&nbsp;пользователя&nbsp;в&nbsp;бан-лист<br>
+&nbsp;<br>
+:param&nbsp;vk:&nbsp;Объект&nbsp;сессии&nbsp;ВК<br>
+:param&nbsp;needkick:&nbsp;Бан-лист<br>
+:param&nbsp;user_id:&nbsp;ID&nbsp;пользователя<br>
+:param&nbsp;chat_id:&nbsp;ID&nbsp;беседы&nbsp;ВК<br>
+:param&nbsp;isWrite:&nbsp;Отображать&nbsp;ли&nbsp;сообщение&nbsp;о&nbsp;добавлении&nbsp;в&nbsp;бан-лист<br>
+&nbsp;<br>
+:NoReturn:</tt></dd></dl>
+ <dl><dt><a name="-addKickMan"><strong>addKickMan</strong></a>(vk, user_id, chat_id, county=0, countn=0)</dt><dd><tt>Генерация&nbsp;словаря&nbsp;для&nbsp;списка&nbsp;претендентов&nbsp;на&nbsp;кик<br>
+&nbsp;<br>
+:param&nbsp;vk:&nbsp;Объект&nbsp;сессии&nbsp;ВК<br>
+:param&nbsp;user_id:&nbsp;id&nbsp;пользователях<br>
+:param&nbsp;chat_id:&nbsp;id&nbsp;беседы&nbsp;ВК<br>
+:param&nbsp;county:&nbsp;Количество&nbsp;голосов&nbsp;"за"<br>
+:param&nbsp;contn:&nbsp;Количество&nbsp;голосов&nbsp;"против"<br>
+&nbsp;<br>
+:return:&nbsp;[dict]&nbsp;{'id':&nbsp;[str],'chat_id':&nbsp;[int],&nbsp;'time':&nbsp;[str],&nbsp;'voted':&nbsp;set(),&nbsp;'count_yes':&nbsp;[int],&nbsp;'count_no':&nbsp;[int]}</tt></dd></dl>
+ <dl><dt><a name="-antispam"><strong>antispam</strong></a>(event, spamlist)</dt><dd><tt>Отслеживание&nbsp;флуда<br>
+&nbsp;<br>
+:param&nbsp;event:&nbsp;Событие&nbsp;LongPoll:&nbsp;Новое&nbsp;сообщение<br>
+:param&nbsp;spamlist:&nbsp;Список&nbsp;флудеров<br>
+&nbsp;<br>
+:return&nbsp;True&nbsp;если&nbsp;пользователь&nbsp;не&nbsp;флудит&nbsp;|&nbsp;False&nbsp;если&nbsp;флудит</tt></dd></dl>
+ <dl><dt><a name="-captcha_handler"><strong>captcha_handler</strong></a>(captcha)</dt><dd><tt>Отлавливание&nbsp;каптчи<br>
+&nbsp;<br>
+:param&nbsp;captcha:&nbsp;Объект&nbsp;капчи<br>
+&nbsp;<br>
+:return:&nbsp;Новая_попытка_отправить_сообщение_с_введенно_капчей</tt></dd></dl>
+ <dl><dt><a name="-checkForBan"><strong>checkForBan</strong></a>(vk, needkick, event)</dt><dd><tt>Проверяет&nbsp;есть&nbsp;ли&nbsp;в&nbsp;беседе&nbsp;заблокированные&nbsp;пользователи&nbsp;и&nbsp;если&nbsp;есть,&nbsp;исключает&nbsp;их<br>
+&nbsp;<br>
+:param&nbsp;vk:&nbsp;Объект&nbsp;сессии&nbsp;ВК<br>
+:param&nbsp;needkick:&nbsp;Список&nbsp;заблокированных&nbsp;пользователей<br>
+:param&nbsp;event:&nbsp;Событие&nbsp;LongPoll:&nbsp;Новое&nbsp;сообщение<br>
+&nbsp;<br>
+:NoReturn:</tt></dd></dl>
+ <dl><dt><a name="-checkFriend"><strong>checkFriend</strong></a>(vk)</dt><dd><tt>Проверка&nbsp;на&nbsp;наличие&nbsp;новых&nbsp;друзей&nbsp;и&nbsp;добавление&nbsp;их<br>
+(необходимо&nbsp;для&nbsp;того,&nbsp;что&nbsp;бы&nbsp;бота&nbsp;могли&nbsp;добавить&nbsp;в&nbsp;беседы&nbsp;любые&nbsp;люди)<br>
+&nbsp;<br>
+:param&nbsp;vk:&nbsp;текущая&nbsp;сессия&nbsp;ВКонтакте<br>
+&nbsp;<br>
+:NoReturn:</tt></dd></dl>
+ <dl><dt><a name="-deletespamlist"><strong>deletespamlist</strong></a>(event, spamlist)</dt><dd><tt>Удаляет&nbsp;пользователя&nbsp;из&nbsp;спам-листа<br>
+&nbsp;<br>
+:param&nbsp;event:&nbsp;событие&nbsp;LongPoll<br>
+:param&nbsp;spamlist:&nbsp;Список&nbsp;фдудеров<br>
+&nbsp;<br>
+:NoReturn:</tt></dd></dl>
+ <dl><dt><a name="-find_delete"><strong>find_delete</strong></a>(kick_list, chat_id)</dt><dd><tt>Поиск&nbsp;индекса&nbsp;списка&nbsp;претендетов&nbsp;на&nbsp;кик&nbsp;элемента&nbsp;с&nbsp;нужной&nbsp;беседы<br>
+&nbsp;<br>
+:param&nbsp;kick_list:&nbsp;Список&nbsp;претендентов&nbsp;на&nbsp;кик<br>
+:param&nbsp;chat_id:&nbsp;id&nbsp;беседы&nbsp;ВК<br>
+&nbsp;<br>
+:return:&nbsp;[int]&nbsp;id_элелемента_с_нужной&nbsp;беседы</tt></dd></dl>
+ <dl><dt><a name="-finishVote"><strong>finishVote</strong></a>(vk, chat_id, kick_list, needkick)</dt><dd><tt>Обработчик&nbsp;события&nbsp;таймера&nbsp;завершения&nbsp;голосования<br>
+&nbsp;<br>
+:param&nbsp;vk:&nbsp;Объект&nbsp;сессии&nbsp;ВК<br>
+:param&nbsp;chat_id:&nbsp;id&nbsp;беседы&nbsp;ВК,&nbsp;в&nbsp;которой&nbsp;завершилось&nbsp;голосование<br>
+:kick_list:&nbsp;Список&nbsp;претендетов&nbsp;на&nbsp;кик<br>
+:needkick:&nbsp;Список&nbsp;заблокированных&nbsp;пользователей<br>
+&nbsp;<br>
+:NoReturn:</tt></dd></dl>
+ <dl><dt><a name="-formatDeltaTime"><strong>formatDeltaTime</strong></a>(dt)</dt><dd><tt>Форматирует&nbsp;разницу&nbsp;во&nbsp;времени&nbsp;из&nbsp;количества&nbsp;секунд&nbsp;в&nbsp;строковое&nbsp;представление<br>
+&nbsp;<br>
+:param&nbsp;dt:&nbsp;Разница&nbsp;во&nbsp;времени&nbsp;в&nbsp;секундах<br>
+&nbsp;<br>
+:return:&nbsp;[str]&nbsp;'{0}&nbsp;дней,&nbsp;{1}&nbsp;часов,&nbsp;{2}&nbsp;минут,&nbsp;{3}&nbsp;секунд'</tt></dd></dl>
+ <dl><dt><a name="-isUserInBanList"><strong>isUserInBanList</strong></a>(needkick, user_id, chat_id)</dt><dd><tt>Проверяет&nbsp;наличие&nbsp;пользователя&nbsp;в&nbsp;бан-листе&nbsp;чата<br>
+:param&nbsp;needkick:&nbsp;Бан-лист<br>
+:param&nbsp;user_id:&nbsp;ID&nbsp;пользователя<br>
+:param&nbsp;chat_id:&nbsp;ID&nbsp;беседы&nbsp;ВК<br>
+&nbsp;<br>
+return&nbsp;[]&nbsp;если&nbsp;нет&nbsp;в&nbsp;списке,&nbsp;[...]&nbsp;если&nbsp;есть</tt></dd></dl>
+ <dl><dt><a name="-main"><strong>main</strong></a>()</dt></dl>
+ <dl><dt><a name="-onTimerSave"><strong>onTimerSave</strong></a>(file)</dt><dd><tt>Обработчик&nbsp;события&nbsp;таймера&nbsp;сохранения&nbsp;списка&nbsp;заблокированных&nbsp;в&nbsp;файл<br>
+&nbsp;<br>
+:param&nbsp;file:&nbsp;Имя&nbsp;файла<br>
+&nbsp;<br>
+:NoReturn:</tt></dd></dl>
+ <dl><dt><a name="-saveListToFile"><strong>saveListToFile</strong></a>(my_list, file)</dt><dd><tt>Сохранение&nbsp;списка&nbsp;в&nbsp;файл<br>
+&nbsp;<br>
+:param&nbsp;my_list:&nbsp;Список,&nbsp;который&nbsp;надо&nbsp;сохранить<br>
+:param&nbsp;file:&nbsp;Имя&nbsp;файла,&nbsp;в&nbsp;который&nbsp;сохранить&nbsp;(Файл&nbsp;перезапишется)<br>
+&nbsp;<br>
+:NoReturn:</tt></dd></dl>
+ <dl><dt><a name="-searchKickList"><strong>searchKickList</strong></a>(kick_list, chat_id)</dt><dd><tt>Поиск&nbsp;в&nbsp;списке&nbsp;претендентов&nbsp;на&nbsp;кик&nbsp;элемента&nbsp;с&nbsp;нужной&nbsp;беседы<br>
+&nbsp;<br>
+:param&nbsp;kick_list:&nbsp;Список&nbsp;претендентов&nbsp;на&nbsp;кик<br>
+:param&nbsp;chat_id:&nbsp;id&nbsp;беседы&nbsp;ВК<br>
+&nbsp;<br>
+:return:&nbsp;[int]&nbsp;Элемент_с_нужной&nbsp;беседы&nbsp;|&nbsp;None,&nbsp;если&nbsp;элемента&nbsp;не&nbsp;существует</tt></dd></dl>
+ <dl><dt><a name="-unbanUser"><strong>unbanUser</strong></a>(vk, user_id, banlist, chat_id)</dt><dd><tt>Разблокировка&nbsp;пользователя&nbsp;(Удаление&nbsp;из&nbsp;ЧС&nbsp;беседы)<br>
+&nbsp;<br>
+:param&nbsp;vk:&nbsp;Объект&nbsp;сессии&nbsp;ВК<br>
+:param&nbsp;user_id:&nbsp;id&nbsp;пользователя,&nbsp;которого&nbsp;надо&nbsp;разбанить<br>
+:param&nbsp;ban_list:&nbsp;Список&nbsp;забаненных&nbsp;пользоваетелей<br>
+:param&nbsp;chat_id:&nbsp;id&nbsp;беседы,&nbsp;в&nbsp;которой&nbsp;надо&nbsp;разблокировать&nbsp;пользователя<br>
+&nbsp;<br>
+:NoReturn:</tt></dd></dl>
+ <dl><dt><a name="-voiceProcessing"><strong>voiceProcessing</strong></a>(event, kick_list, vk, element, ind)</dt><dd><tt>Обработка&nbsp;голоса&nbsp;пользователя<br>
+&nbsp;<br>
+:event:&nbsp;Объект&nbsp;события&nbsp;LongPoll<br>
+:kick_list:&nbsp;Список&nbsp;претендетов&nbsp;на&nbsp;кик<br>
+:vk:&nbsp;Объект&nbsp;сессии&nbsp;ВК<br>
+:element:&nbsp;Элемент&nbsp;списка&nbsp;претендентов&nbsp;на&nbsp;кик&nbsp;для&nbsp;данного&nbsp;чата<br>
+:ind:&nbsp;Выбранный&nbsp;пользователем&nbsp;вариант&nbsp;голоса.&nbsp;Может&nbsp;принимать<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;два&nbsp;значения:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'count_yes',&nbsp;если&nbsp;пользователь&nbsp;проголосовал&nbsp;за&nbsp;кик.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'count_no',&nbsp;если&nbsp;против<br>
+&nbsp;<br>
+:NoReturn:</tt></dd></dl>
+</td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#55aa55">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Data</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#55aa55"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><strong>antiCaptchaKey</strong> = 'c061bc51733b4a7e025dda5a0045a777'<br>
+<strong>isUsedAntiCaptcha</strong> = True<br>
+<strong>kick_list</strong> = []<br>
+<strong>needkick</strong> = []<br>
+<strong>spam_list</strong> = []</td></tr></table>
+</body></html>
