@@ -170,7 +170,7 @@ def unbanUser(vk,user_id, banlist, chat_id):
     for i, element in enumerate(banlist): # Перебируем список заблокированных
         if element['id'] == id and element['chat'] == chat_id: # Нашли
             del banlist[i] # Удаляем элемент списка
-            userName = users.getName(vk, user_id)
+            userName = users.getName(vk, user_id, 'nom')
             user_message = bot_msg.unban_user.format(userName)
             break
     else:
@@ -178,11 +178,13 @@ def unbanUser(vk,user_id, banlist, chat_id):
     writeMessage(vk,chat_id,user_message)
 
 def checkForBan(vk, needkick, event):
-    ''' Проверяет есть ли в беседе заблокированные пользователи
+    ''' Проверяет есть ли в беседе заблокированные пользователи и если есть, исключает их
 
         :param vk: Объект сессии ВК
         :param needkick: Список заблокированных пользователей
         :param event: Событие LongPoll: Новое сообщение
+
+        :NoReturn:
     '''
     for el in needkick:
         if chats.isUserInConversation(vk,el['id'], event.chat_id) and (el['chat'] == event.chat_id):
@@ -190,7 +192,7 @@ def checkForBan(vk, needkick, event):
             writeMessage(vk, event.chat_id, bot_msg.banned_user_came_in)
             kickUser(vk, event.chat_id, el['id'])
 
-def addBanList(vk, needkick, user_id, chat_id, isWrite = false):
+def addBanList(vk, needkick, user_id, chat_id, isWrite = False):
     ''' Добавляет пользователя в бан-лист
 
         :param vk: Объект сессии ВК
@@ -294,10 +296,10 @@ def checkFriend(vk):
 def captcha_handler(captcha):
     ''' Отлавливание каптчи
 
-            :param captcha: Объект капчи
+    :param captcha: Объект капчи
 
-            :return: Новая_попытка_отправить_сообщение_с_введенно_капчей
-            '''
+    :return: Новая_попытка_отправить_сообщение_с_введенно_капчей
+    '''
     print('Entered captcha')
     key = ImageToTextTask.ImageToTextTask(anticaptcha_key=antiCaptchaKey, save_format='const') \
             .captcha_handler(captcha_link=captcha.get_url())
@@ -450,6 +452,7 @@ def main():
                             addBanList(vk_session, needkick, user_id, event.chat_id, True)
                             if chats.isUserInConversation(vk_session,user_id,event.chat_id):
                                 checkForBan(vk_session, needkick, event)
+
                 if (len(answer) == 1) and (answer[0].lower() == '!uptime'):
                     now = int(time.time()) # Текущее время
                     delta = now - start_date # Разница во времени
