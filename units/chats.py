@@ -3,10 +3,17 @@
 С БЕСЕДАМИ
 VOTEBAN BOT
 '''
-
+from functools import lru_cache
 from units import vkapi
 from units import users
 import bot_msg
+
+@lru_cache(maxsize=8)
+def getChatMembers(vk, chat_id):
+    try:
+        return vk.method('messages.getConversationMembers', {'peer_id': 2000000000+chat_id})
+    except:
+        return {'items': []}
 
 
 def isUserInConversation(vk, user_id, chat_id):
@@ -16,7 +23,7 @@ def isUserInConversation(vk, user_id, chat_id):
         :param user_id: id пользователя
         :param chat_id: id беседы ВК
 
-        :return: True, если пользователь в беседе | False, если не в беседе
+        :return: Непустой список , если пользователь в беседе | [], если не в беседе
     '''
     user = users.getUser(vk,user_id) # Получаем объект пользователя
 
@@ -29,15 +36,10 @@ def isUserInConversation(vk, user_id, chat_id):
         return False
 
     # Получаем информацию о пользователях беседы
-    try:
-        chatMembers = vk.method('messages.getConversationMembers', {'peer_id': 2000000000+chat_id})
-    except:
-        return False
+    chatMembers = getChatMembers(vk, chat_id)
 
-    for member in chatMembers['items']: # Перебираем пользоваетелей беседы
-        if member['member_id'] == id:
-            return True # Пользователь найден в беседе
-    return False
+    return list(filter(lambda member: member['member_id'] == id, chatMembers['items']))
+
 
 def getUsersCount(vk, chat_id):
     ''' Получаем число участников беседы
@@ -48,7 +50,7 @@ def getUsersCount(vk, chat_id):
         :return: [int] Число_участников
     '''
     # Получаем информацию о пользователях беседы
-    chatMembers = vk.method('messages.getConversationMembers', {'peer_id': 2000000000+chat_id})
+    chatMembers = getChatMembers(vk, chat_id)
     return chatMembers['count']
 
 def isAdmin(vk, user_id, chat_id):
@@ -61,7 +63,7 @@ def isAdmin(vk, user_id, chat_id):
     '''
 
     # Получаем информацию о пользователях беседы
-    chatMembers = vk.method('messages.getConversationMembers', {'peer_id': 2000000000+chat_id})
+    chatMembers = vk.method('messages.getConversationMembers', {'peer_id': 2000000000+chat_id}) # Кеширование невозможно т.к. нет события на выдачу админки
     for member in chatMembers['items']: # Перебираем пользоваетелей беседы
         if member['member_id'] == user_id:
             return member.get('is_admin', False)

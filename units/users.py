@@ -10,6 +10,9 @@ from units import chats
 import bot_msg
 import const
 
+from functools import lru_cache
+
+@lru_cache(maxsize=32)
 def getUser(vk, user_id, name_case = 'gen'):
     ''' Получаем информацию о пользователе с id = id
 

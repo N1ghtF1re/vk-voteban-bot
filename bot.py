@@ -29,6 +29,7 @@ from units import users
 from units import chats
 from units.vkapi import writeMessage, kickUser
 
+from functools import lru_cache
 
 # INITIANALISATION
 
@@ -378,6 +379,7 @@ def main():
     for event in longpoll.listen(): # События VkLongPoll
 
         if event.type == VkEventType.CHAT_EDIT: # Кто-то вошел/вышел/изменил название беседы
+            chats.getChatMembers.cache_clear()
             checkForBan(vk_session, needkick, event)
 
 
@@ -467,7 +469,7 @@ except Exception as error_msg:
         f = open('error.log', 'a')
     except IOError:
         f = open('error.log', 'w')
-    print(str(time.time()), file=f, end=' ')
+    print(str(time.localtime(time.time())), file=f, end=' ')
     print(error_msg, file = f, end='\n')
     f.close()
     print(needkick)
