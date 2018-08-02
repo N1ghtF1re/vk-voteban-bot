@@ -189,7 +189,7 @@ def checkForBan(vk, needkick, event):
     lol = int(time.time())
     writeMessage(vk, event.chat_id, 'Начал кек')
     for el in needkick:
-        if chats.isUserInConversation(vk,el['id'], event.chat_id) and (el['chat'] == event.chat_id):
+        if (el['chat'] == event.chat_id) and chats.isUserInConversation(vk,el['id'], event.chat_id):
         # Пользователь ливнул во время голосования и вернулся
             writeMessage(vk, event.chat_id, bot_msg.banned_user_came_in)
             kickUser(vk, event.chat_id, el['id'])
@@ -379,7 +379,6 @@ def main():
     for event in longpoll.listen(): # События VkLongPoll
 
         if event.type == VkEventType.CHAT_EDIT: # Кто-то вошел/вышел/изменил название беседы
-            print(needkick)
             checkForBan(vk_session, needkick, event)
 
 
@@ -469,7 +468,7 @@ except Exception as error_msg:
         f = open('error.log', 'a')
     except IOError:
         f = open('error.log', 'w')
-    print(str(datetime.now()), file=f, end=' ')
+    print(str(time.time()), file=f, end=' ')
     print(error_msg, file = f, end='\n')
     f.close()
     print(needkick)
