@@ -1,19 +1,32 @@
 '''
-ПОДПРОГРАММЫ ДЛЯ РАБОТЫ
+ФУНКЦИИ ДЛЯ РАБОТЫ
 С БЕСЕДАМИ
 VOTEBAN BOT
 '''
-from functools import lru_cache
+from functools import lru_cache # Кеширование
+
 from units import vkapi
 from units import users
 import bot_msg
 
 @lru_cache(maxsize=8)
 def getChatMembers(vk, chat_id):
+    ''' ВОЗВРАЩАЕТ ОБЪЕКТ БЕСЕДЫ
+
+        :additional: Функция кеширует последние 8 результатов. Кеш очищается при
+        обновлении одной из бесед (событие CHAT_EDIT)
+
+        :param vk: Объект сессии вк
+        :param chat_id: id беседы ВК
+
+        :return: Объект беседы ВК. Подробнее: https://vk.com/dev/messages.getConversationMembers
+    '''
+
     try:
         return vk.method('messages.getConversationMembers', {'peer_id': 2000000000+chat_id})
     except:
         return {'items': []}
+
 
 
 def isUserInConversation(vk, user_id, chat_id):

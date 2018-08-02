@@ -379,7 +379,7 @@ def main():
     for event in longpoll.listen(): # События VkLongPoll
 
         if event.type == VkEventType.CHAT_EDIT: # Кто-то вошел/вышел/изменил название беседы
-            chats.getChatMembers.cache_clear()
+            chats.getChatMembers.cache_clear() # Если кто-то пришел/ушел - очищаем кеш функции chats.getChatMembers
             checkForBan(vk_session, needkick, event)
 
 

@@ -16,6 +16,8 @@ from functools import lru_cache
 def getUser(vk, user_id, name_case = 'gen'):
     ''' Получаем информацию о пользователе с id = id
 
+        :additional: Функция кеширует последние 32 результата
+
         :param vk: Объект сессии ВК
         :param user_id: ID пользователя (id или screen_id)
         :param name_case: Падеж имен пользователей. Подробнее:
@@ -28,6 +30,7 @@ def getUser(vk, user_id, name_case = 'gen'):
         return vk.method('users.get', {'user_ids': user_id, 'name_case':name_case})[0]
     except vk_api.exceptions.ApiError:
         return None # Пользователь не найден
+
 
 def getName(vk, user_id, name_case = 'gen'):
     ''' Получаем строку с фамилей и именем пользователя в нужном падеже
