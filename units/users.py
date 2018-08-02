@@ -52,7 +52,7 @@ def isCanKick(vk, user_id, chat_id, NoCheckIN = False):
     '''
     if not NoCheckIN or getUser(vk,user_id):
         if NoCheckIN or chats.isUserInConversation(vk, user_id, chat_id): # Поиск в беседе пользователя. Если найден - продолжаем
-            if NoCheckIN or not(chats.isAdmin(vk, getUser(vk,user_id)['id'], chat_id)): # Если пользователь - не админ, продолжаем
+            if not(chats.isUserInConversation(vk, user_id, chat_id)) or not(chats.isAdmin(vk, getUser(vk,user_id)['id'], chat_id)): # Если пользователя нет в беседе или если пользователь - не админ, продолжаем
                 if not(user_id in const.nokick):
                     return True
                 else:

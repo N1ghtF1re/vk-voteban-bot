@@ -32,6 +32,7 @@ from units.vkapi import writeMessage, kickUser
 
 # INITIANALISATION
 
+
 needkick = [] # Пользователи в ЧС беседы. Формат: [{'id':id, 'chat_id':chat_id}, {...}]
 
 
@@ -110,7 +111,6 @@ def voiceProcessing(event, kick_list,vk,element, ind):
             # Формируем и отправляем сообщения о голосе
             user_message = bot_msg.vote_accepted.format(str(element['count_yes']),str(element['count_no']))
             writeMessage(vk, event.chat_id, user_message)
-        print(kick_list)
     else:
         writeMessage(vk, event.chat_id, bot_msg.err_vote_for_yourself)
 
@@ -381,6 +381,7 @@ def main():
 
 
         if (event.type == VkEventType.MESSAGE_NEW) and event.from_chat: # Событие: новое сообщение в чате
+            event.text = event.text.lower()
             if antispam(event,spam_list):
 
                 answer = event.text.split() # Отправленное юзверем сообщение
@@ -388,7 +389,7 @@ def main():
                 chat_id = event.chat_id
 
 
-                if (len(answer) == 2) and (answer[0].lower() == '!voteban'): # если сообщение из двух строк и первое - служебное !voteban
+                if (len(answer) == 2) and (answer[0] == '!voteban'): # если сообщение из двух строк и первое - служебное !voteban
                     if not(chats.isAdmin(vk_session, my_id, chat_id)): # Если бот не является админом
                         writeMessage(vk_session, chat_id, bot_msg.no_admin_rights)
                     else:
@@ -412,7 +413,7 @@ def main():
                             user_message = bot_msg.voting_is_active
                             writeMessage(vk_session, chat_id, user_message)
 
-                if (len(answer) == 1) and ((answer[0].lower() == '!votehelp') or (answer[0].lower() == '!voteban')):
+                if (len(answer) == 1) and ((answer[0] == '!votehelp') or (answer[0] == '!voteban')):
                     message = bot_msg.help.format(const.vote_time, const.vote_count)
                     writeMessage(vk_session, chat_id , message)
                 if (len(answer) == 1) and (answer[0] in const.kick_commands) and searchKickList(kick_list, chat_id):
@@ -421,14 +422,14 @@ def main():
                 if (len(answer) == 1) and (answer[0] in const.anti_kick_commands) and searchKickList(kick_list, chat_id):
                     voiceProcessing(event,kick_list,vk_session, searchKickList(kick_list, event.chat_id),'count_no')
 
-                if (len(answer) == 2) and (answer[0].lower() == '!unban'):
+                if (len(answer) == 2) and (answer[0] == '!unban'):
                     if not (chats.isAdmin(vk_session, event.user_id, chat_id)):
                         writeMessage(vk_session, event.chat_id, bot_msg.you_are_not_admin)
                     else:
                         user_id = answer[1]
                         unbanUser(vk_session,user_id,needkick,event.chat_id)
 
-                if (len(answer) == 1) and (answer[0].lower() == '!banlist'):
+                if (len(answer) == 1) and (answer[0] == '!banlist'):
                     user_message = ''
                     if len(needkick) != 0:
                        # user_message =
@@ -443,7 +444,7 @@ def main():
                     else:
                         writeMessage(vk_session, event.chat_id, bot_msg.banlist_empty)
 
-                if (len(answer) == 2) and (answer[0].lower() == '!addinbanlist'):
+                if (len(answer) == 2) and (answer[0] == '!addinbanlist'):
                     if not (chats.isAdmin(vk_session, event.user_id, chat_id)):
                         writeMessage(vk_session, event.chat_id, bot_msg.you_are_not_admin)
                     else:
@@ -453,7 +454,7 @@ def main():
                             if chats.isUserInConversation(vk_session,user_id,event.chat_id):
                                 checkForBan(vk_session, needkick, event)
 
-                if (len(answer) == 1) and (answer[0].lower() == '!uptime'):
+                if (len(answer) == 1) and (answer[0] == '!uptime'):
                     now = int(time.time()) # Текущее время
                     delta = now - start_date # Разница во времени
                     writeMessage(vk_session, event.chat_id, bot_msg.my_uptime + formatDeltaTime(delta))
