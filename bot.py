@@ -186,12 +186,15 @@ def checkForBan(vk, needkick, event):
 
         :NoReturn:
     '''
+    lol = int(time.time())
+    writeMessage(vk, event.chat_id, 'Начал кек')
     for el in needkick:
         if chats.isUserInConversation(vk,el['id'], event.chat_id) and (el['chat'] == event.chat_id):
         # Пользователь ливнул во время голосования и вернулся
             writeMessage(vk, event.chat_id, bot_msg.banned_user_came_in)
             kickUser(vk, event.chat_id, el['id'])
-
+    kek =  int(time.time())  - lol
+    writeMessage(vk, event.chat_id, 'Закончил кек. Время: ' + str(kek))
 def addBanList(vk, needkick, user_id, chat_id, isWrite = False):
     ''' Добавляет пользователя в бан-лист
 
@@ -270,7 +273,7 @@ def onTimerSave(file):
     '''
     global needkick
     saveListToFile(needkick, file)
-    print('Сохранение в файл..')
+    print('Save to file..')
     saveTimer = threading.Timer(const.backups_time*60, onTimerSave, [file])
     saveTimer.start()
 
@@ -383,7 +386,6 @@ def main():
         if (event.type == VkEventType.MESSAGE_NEW) and event.from_chat: # Событие: новое сообщение в чате
             event.text = event.text.lower()
             if antispam(event,spam_list):
-
                 answer = event.text.split() # Отправленное юзверем сообщение
 
                 chat_id = event.chat_id
