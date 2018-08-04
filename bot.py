@@ -376,12 +376,14 @@ def main():
 
     longpoll = VkLongPoll(vk_session)
     for event in longpoll.listen(): # События VkLongPoll
-        if event.type in [VkChatEventType.USER_JOINED, VkChatEventType.USER_LEFT, VkChatEventType.USER_KICKED]:
+        if (event.type is VkChatEventType.USER_JOINED) or (event.type is VkChatEventType.USER_LEFT) or (event.type is VkChatEventType.USER_KICKED):
             chats.getChatMembers.cache_clear() # Если кто-то пришел/ушел - очищаем кеш функции chats.getChatMembers
             print('Clearing getChatMember cache')
 
-        if event.type == VkChatEventType.USER_JOINED: # Кто-то зашел в беседу
+        if event.type is VkChatEventType.USER_JOINED: # Кто-то зашел в беседу
+            print(event.type)
             join_userid = event.info['user_id'] # id пользователя, который зашел в беседу
+            print('User id{} joined'.format(join_userid))
             checkForBan(vk_session, needkick, join_userid, event.chat_id)
 
         if False and (event.type == VkEventType.MESSAGE_NEW) and event.from_chat: # Событие: новое сообщение в чате
