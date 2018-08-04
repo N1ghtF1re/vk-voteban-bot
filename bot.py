@@ -12,7 +12,7 @@ import json
 
 
 import vk_api
-from vk_api.longpoll import VkLongPoll, VkEventType
+from vk_api.longpoll import VkLongPoll, VkEventType, VkChatEventType
 
 import time
 
@@ -178,21 +178,20 @@ def unbanUser(vk,user_id, banlist, chat_id):
         user_message = bot_msg.no_user_in_banlist
     writeMessage(vk,chat_id,user_message)
 
-def checkForBan(vk, needkick, event):
-    ''' Проверяет есть ли в беседе заблокированные пользователи и если есть, исключает их
+def checkForBan(vk, needkick, user_id, chat_id):
+    ''' Проверяем, нужно ли выгнать пользователя (находится ли он в черном списке) и если находится, то выгоняем его
 
         :param vk: Объект сессии ВК
-        :param needkick: Список заблокированных пользователей
-        :param event: Событие LongPoll: Новое сообщение
+        :param needkick: Бан-лист
+        :param user_id: ID пользователя
+        :param chat_id: ID беседы ВК
 
         :NoReturn:
     '''
-
-    for el in needkick:
-        if (el['chat'] == event.chat_id) and chats.isUserInConversation(vk,el['id'], event.chat_id):
-        # Пользователь ливнул во время голосования и вернулся
-            writeMessage(vk, event.chat_id, bot_msg.banned_user_came_in)
-            kickUser(vk, event.chat_id, el['id'])
+    if isUserInBanList(needkick, user_id, chat_id):
+        # Пользователь из ЧС находится в беседе
+        writeMessage(vk, chat_id, bot_msg.banned_user_came_in)
+        kickUser(vk, chat_id, user_id)
 
 
 def addBanList(vk, needkick, user_id, chat_id, isWrite = False):
@@ -377,10 +376,13 @@ def main():
 
     longpoll = VkLongPoll(vk_session)
     for event in longpoll.listen(): # События VkLongPoll
-
-        if event.type == VkEventType.CHAT_EDIT: # Кто-то вошел/вышел/изменил название беседы
+        if event.type in [VkChatEventType.USER_JOINED, VkChatEventType.USER_LEFT, VkChatEventType.USER_KICKED]:
             chats.getChatMembers.cache_clear() # Если кто-то пришел/ушел - очищаем кеш функции chats.getChatMembers
-            checkForBan(vk_session, needkick, event)
+            print('Clearing getChatMember cache')
+
+        if event.type == VkChatEventType.USER_JOINED: # Кто-то зашел в беседу
+            join_userid = event.info['user_id'] # id пользователя, который зашел в беседу
+            checkForBan(vk_session, needkick, join_userid, event.chat_id)
 
         if False and (event.type == VkEventType.MESSAGE_NEW) and event.from_chat: # Событие: новое сообщение в чате
             event.text = event.text.lower()
@@ -448,12 +450,12 @@ def main():
                 if (len(answer) == 2) and (answer[0] == '!addinbanlist'):
                     if not (chats.isAdmin(vk_session, event.user_id, chat_id)):
                         writeMessage(vk_session, event.chat_id, bot_msg.you_are_not_admin)
-                    else:
-                        user_id = answer[1]
-                        if users.isCanKick(vk_session, user_id, event.chat_id, True):
-                            addBanList(vk_session, needkick, user_id, event.chat_id, True)
-                            if chats.isUserInConversation(vk_session,user_id,event.chat_id):
-                                checkForBan(vk_session, needkick, event)
+                    else: # Если пользователь - администратор
+                        banned_user_id = answer[1] # ID пользователя, которого кидаем в ЧС
+                        if users.isCanKick(vk_session, banned_user_id, event.chat_id, True): # Проверка, что пользователь не является админом и тд
+                            addBanList(vk_session, needkick, banned_user_id, event.chat_id, True) # Добавляем в черный список
+                            if chats.isUserInConversation(vk_session,banned_user_id,event.chat_id): # Если пользователь в беседе - кикаем его
+                                checkForBan(vk_session, needkick, banned_user_id, event.chat_id)
 
                 if (len(answer) == 1) and (answer[0] == '!uptime'):
                     now = int(time.time()) # Текущее время
