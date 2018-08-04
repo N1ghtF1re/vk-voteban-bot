@@ -386,7 +386,8 @@ def main():
             print('User id{} joined'.format(join_userid))
             checkForBan(vk_session, needkick, join_userid, event.chat_id)
 
-        if False and (event.type == VkEventType.MESSAGE_NEW) and event.from_chat: # Событие: новое сообщение в чате
+
+        if (event.type == VkEventType.MESSAGE_NEW) and event.from_chat: # Событие: новое сообщение в чате
             event.text = event.text.lower()
             if antispam(event,spam_list):
                 answer = event.text.split() # Отправленное юзверем сообщение
@@ -463,12 +464,10 @@ def main():
                     now = int(time.time()) # Текущее время
                     delta = now - start_date # Разница во времени
                     writeMessage(vk_session, event.chat_id, bot_msg.my_uptime + formatDeltaTime(delta))
-if __name__ == '__main__':
-    main()
 
-'''
 try:
-
+    if __name__ == '__main__':
+        main()
 except Exception as error_msg:
     try:
         f = open('error.log', 'a')
@@ -485,5 +484,4 @@ else:
     saveListToFile(needkick, const.file_name)
     print("I'm finishing my work ...")
 
-'''
 print(needkick)
