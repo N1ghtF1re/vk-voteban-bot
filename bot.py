@@ -192,10 +192,12 @@ def checkForBan(vk, black_list, user_id, chat_id):
 
         :NoReturn:
     '''
-    if isUserInBanList(black_list, user_id, chat_id):
+    id = users.getUser(vk,user_id)['id']
+
+    if isUserInBanList(black_list, id, chat_id):
         # Пользователь из ЧС находится в беседе
         writeMessage(vk, chat_id, bot_msg.banned_user_came_in)
-        kickUser(vk, chat_id, user_id)
+        kickUser(vk, chat_id, id)
 
 
 def addBanList(vk, black_list, user_id, chat_id, isWrite = False):
