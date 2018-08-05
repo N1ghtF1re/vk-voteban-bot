@@ -35,15 +35,18 @@ from functools import lru_cache
 # INITIANALISATION
 
 
-needkick = [] # Пользователи в ЧС беседы. Формат: [{'id':id, 'chat_id':chat_id}, {...}]
+black_list = [] # Пользователи в ЧС беседы. Формат: [{'id':id, 'chat_id':chat_id}, {...}]
 
 
-''' Список претендентов на кик.
+
+''' Список голосований на кик.
     Формат: [{'id': [str],'chat_id': [int], 'voted': set(), 'count_yes': [int], 'count_no': [int]}, {...}]
 
     Особенность: в данном списке может находиться только один элемент для каждой беседы
 '''
-kick_list = []
+kick_votes = []
+
+
 spam_list = []
 
 
@@ -65,36 +68,36 @@ def addKickMan(vk, user_id, chat_id,county=0,countn=0):
     dic = {'id': user_id,'chat_id': chat_id, 'voted': mem, 'count_yes': county, 'count_no': countn}
     return dic
 
-def searchKickList(kick_list, chat_id):
+def searchKickList(kick_votes, chat_id):
     ''' Поиск в списке претендентов на кик элемента с нужной беседы
 
-        :param kick_list: Список претендентов на кик
+        :param kick_votes: Список претендентов на кик
         :param chat_id: id беседы ВК
 
         :return: [int] Элемент_с_нужной беседы | None, если элемента не существует
     '''
-    for element in kick_list:
+    for element in kick_votes:
         if element['chat_id'] == chat_id:
             return element
 
-def find_delete(kick_list,chat_id):
+def find_delete(kick_votes,chat_id):
     ''' Поиск индекса списка претендетов на кик элемента с нужной беседы
 
-        :param kick_list: Список претендентов на кик
+        :param kick_votes: Список претендентов на кик
         :param chat_id: id беседы ВК
 
         :return: [int] id_элелемента_с_нужной беседы
     '''
 
-    for i, element in enumerate(kick_list):
+    for i, element in enumerate(kick_votes):
         if element['chat_id'] == chat_id:
             return i
 
-def voiceProcessing(event, kick_list,vk,element, ind):
+def voiceProcessing(event, kick_votes,vk,element, ind):
     ''' Обработка голоса пользователя
 
         :event: Объект события LongPoll
-        :kick_list: Список претендетов на кик
+        :kick_votes: Список претендетов на кик
         :vk: Объект сессии ВК
         :element: Элемент списка претендентов на кик для данного чата
         :ind: Выбранный пользователем вариант голоса. Может принимать
@@ -179,27 +182,27 @@ def unbanUser(vk,user_id, banlist, chat_id):
         user_message = bot_msg.no_user_in_banlist
     writeMessage(vk,chat_id,user_message)
 
-def checkForBan(vk, needkick, user_id, chat_id):
+def checkForBan(vk, black_list, user_id, chat_id):
     ''' Проверяем, нужно ли выгнать пользователя (находится ли он в черном списке) и если находится, то выгоняем его
 
         :param vk: Объект сессии ВК
-        :param needkick: Бан-лист
+        :param black_list: Бан-лист
         :param user_id: ID пользователя
         :param chat_id: ID беседы ВК
 
         :NoReturn:
     '''
-    if isUserInBanList(needkick, user_id, chat_id):
+    if isUserInBanList(black_list, user_id, chat_id):
         # Пользователь из ЧС находится в беседе
         writeMessage(vk, chat_id, bot_msg.banned_user_came_in)
         kickUser(vk, chat_id, user_id)
 
 
-def addBanList(vk, needkick, user_id, chat_id, isWrite = False):
+def addBanList(vk, black_list, user_id, chat_id, isWrite = False):
     ''' Добавляет пользователя в бан-лист
 
         :param vk: Объект сессии ВК
-        :param needkick: Бан-лист
+        :param black_list: Бан-лист
         :param user_id: ID пользователя
         :param chat_id: ID беседы ВК
         :param isWrite: Отображать ли сообщение о добавлении в бан-лист
@@ -208,37 +211,60 @@ def addBanList(vk, needkick, user_id, chat_id, isWrite = False):
     '''
 
     id = users.getUser(vk,user_id)['id']
-    if isUserInBanList(needkick, id, chat_id): # Если пользователь уже в бан-листе
+    if isUserInBanList(black_list, id, chat_id): # Если пользователь уже в бан-листе
         writeMessage(vk, chat_id, bot_msg.user_already_in_banlist)
     else:
-        needkick.append({'id': id, 'chat': chat_id})
+        black_list.append({'id': id, 'chat': chat_id})
         if isWrite:
             writeMessage(vk, chat_id, bot_msg.user_added_in_banlist)
 
-def isUserInBanList(needkick, user_id, chat_id):
+def isUserInBanList(black_list, user_id, chat_id):
     ''' Проверяет наличие пользователя в бан-листе чата
-        :param needkick: Бан-лист
+        :param black_list: Бан-лист
         :param user_id: ID пользователя
         :param chat_id: ID беседы ВК
 
         return [] если нет в списке, [...] если есть
     '''
-    return list(filter(lambda ban_dict: (ban_dict['id'] == user_id) and (ban_dict['chat'] == chat_id), needkick) )
+    return list(filter(lambda ban_dict: (ban_dict['id'] == user_id) and (ban_dict['chat'] == chat_id), black_list) )
+
+def getBanList(vk, ban_list, chat_id):
+    ''' Вовращает ЧС список беседы с ID = chat_id
+
+        :param vk: Объект сессии ВК
+        :param black_list: Бан-лист
+        :param chat_id: ID беседы ВК
+
+        :return: [string] BlackList
+    '''
+    user_message = ''
+    if len(black_list) != 0:
+       # user_message =
+        for element in black_list:
+            if element['chat'] == chat_id:
+                user_message += '* [id{1}|{0}] [id{1}] \n'.format(str(users.getName(vk_session,element['id'],'nom')), element['id'])
+        if len(user_message) != 0:
+            message = bot_msg.banned_list + user_message
+        else:
+            message = bot_msg.banlist_empty
+        return message
+    else:
+        return bot_msg.banlist_empty
 
 # ------------------------------ HANDLERS -------------------------------------------
 
-def finishVote(vk, chat_id, kick_list, needkick):
+def finishVote(vk, chat_id, kick_votes, black_list):
     ''' Обработчик события таймера завершения голосования
 
         :param vk: Объект сессии ВК
         :param chat_id: id беседы ВК, в которой завершилось голосование
-        :kick_list: Список претендетов на кик
-        :needkick: Список заблокированных пользователей
+        :kick_votes: Список претендетов на кик
+        :black_list: Список заблокированных пользователей
 
         :NoReturn:
     '''
     # Получаем элемент списка претендетов на кик для данной беседы
-    kick_info = searchKickList(kick_list, chat_id)
+    kick_info = searchKickList(kick_votes, chat_id)
 
     # Генерируем и отправляем сообщение о завершении голосования
     message = bot_msg.finish_vote.format(users.getName(vk, kick_info['id']),kick_info['count_yes'],kick_info['count_no'])
@@ -254,7 +280,7 @@ def finishVote(vk, chat_id, kick_list, needkick):
                 kickUser(vk, chat_id, kick_info['id'])
             else: # Пользователь ливнул во время голосования
                 writeMessage(vk,chat_id, bot_msg.user_leave)
-            addBanList(vk, needkick, kick_info['id'], chat_id)
+            addBanList(vk, black_list, kick_info['id'], chat_id)
 
         elif len(kick_info['voted']) < const.vote_count:
             writeMessage(vk, chat_id, bot_msg.no_votes_cast.format(len(kick_info['voted']), const.vote_count))
@@ -263,7 +289,7 @@ def finishVote(vk, chat_id, kick_list, needkick):
     except vk_api.ApiError:
         logs.write("WARNING! Bot's kicked in chat {0}".format(chat_id))
 
-    kick_list.pop(find_delete(kick_list,chat_id)) # Извлекаем из очереди на кик
+    kick_votes.pop(find_delete(kick_votes,chat_id)) # Извлекаем из очереди на кик
 
 
 def onTimerSave(file):
@@ -273,8 +299,8 @@ def onTimerSave(file):
 
         :NoReturn:
     '''
-    global needkick
-    saveListToFile(needkick, file)
+    global black_list
+    saveListToFile(black_list, file)
     logs.write('Create banlist backup..')
     saveTimer = threading.Timer(const.backups_time*60, onTimerSave, [file])
     saveTimer.start()
@@ -350,16 +376,16 @@ def main():
 
     logs.write("I'm starting my work ...")
     start_date = int(time.time()) # Секунд с начала эпохи
-    global needkick
-    global kick_list
+    global black_list
+    global kick_votes
 
     try:
         f = open(const.file_name, 'r')
     except FileNotFoundError:
         open(const.file_name, 'w')
-        needkick = []
+        black_list = []
     else:
-        needkick = json.loads(f.readline())
+        black_list = json.loads(f.readline())
         f.close()
 
     saveTimer = threading.Timer(const.backups_time*60, onTimerSave, [const.file_name])
@@ -387,7 +413,7 @@ def main():
         if event.type is VkChatEventType.USER_JOINED: # Кто-то зашел в беседу
             join_userid = event.info['user_id'] # id пользователя, который зашел в беседу
             logs.write('User id{} joined'.format(join_userid))
-            checkForBan(vk_session, needkick, join_userid, event.chat_id)
+            checkForBan(vk_session, black_list, join_userid, event.chat_id)
 
 
         if (event.type == VkEventType.MESSAGE_NEW) and event.from_chat: # Событие: новое сообщение в чате
@@ -402,7 +428,7 @@ def main():
                     if not(chats.isAdmin(vk_session, my_id, chat_id)): # Если бот не является админом
                         writeMessage(vk_session, chat_id, bot_msg.no_admin_rights)
                     else:
-                        if searchKickList(kick_list,chat_id) == None:
+                        if searchKickList(kick_votes,chat_id) == None:
                             user_id = answer[1]
                             user = users.getName(vk_session, user_id) # Получаем информацию о пользователе
                             if users.isCanKick(vk_session, user_id, chat_id):
@@ -413,11 +439,11 @@ def main():
                                 else:
                                     user_id = 'id' + user_id
                                 user_message = bot_msg.start_vote.format(user_id, user, const.vote_time, const.vote_count)
-                                kick_list.append(addKickMan(vk_session,user_id,chat_id)) # Добавляем в список очереди на кик
+                                kick_votes.append(addKickMan(vk_session,user_id,chat_id)) # Добавляем в список очереди на кик
 
                                 logs.write('New voteban: chat: {0}, member: {1}'.format(chat_id, user_id))
 
-                                timer = threading.Timer(60*const.vote_time, finishVote, [vk_session, chat_id, kick_list, needkick])
+                                timer = threading.Timer(60*const.vote_time, finishVote, [vk_session, chat_id, kick_votes, black_list])
                                 timer.start()
                                 writeMessage(vk_session, chat_id, user_message)
                         else:
@@ -427,34 +453,24 @@ def main():
                 if (len(answer) == 1) and ((answer[0] == '!votehelp') or (answer[0] == '!voteban')):
                     message = bot_msg.help.format(const.vote_time, const.vote_count)
                     writeMessage(vk_session, chat_id , message)
-                if (len(answer) == 1) and (answer[0] in const.kick_commands) and searchKickList(kick_list, chat_id):
-                    voiceProcessing(event,kick_list,vk_session,searchKickList(kick_list,event.chat_id),'count_yes')
+                if (len(answer) == 1) and (answer[0] in const.kick_commands) and searchKickList(kick_votes, chat_id):
+                    voiceProcessing(event,kick_votes,vk_session,searchKickList(kick_votes,event.chat_id),'count_yes')
 
-                if (len(answer) == 1) and (answer[0] in const.anti_kick_commands) and searchKickList(kick_list, chat_id):
-                    voiceProcessing(event,kick_list,vk_session, searchKickList(kick_list, event.chat_id),'count_no')
+                if (len(answer) == 1) and (answer[0] in const.anti_kick_commands) and searchKickList(kick_votes, chat_id):
+                    voiceProcessing(event,kick_votes,vk_session, searchKickList(kick_votes, event.chat_id),'count_no')
 
                 if (len(answer) == 2) and (answer[0] == '!unban'):
                     if not (chats.isAdmin(vk_session, event.user_id, chat_id)):
                         writeMessage(vk_session, event.chat_id, bot_msg.you_are_not_admin)
                     else:
                         user_id = answer[1]
-                        unbanUser(vk_session,user_id,needkick,event.chat_id)
+                        unbanUser(vk_session,user_id,black_list,event.chat_id)
                         logs.write('Unbaned user, chat: {0}, member: {1}'.format(event.chat_id, user_id))
 
                 if (len(answer) == 1) and (answer[0] == '!banlist'):
-                    user_message = ''
-                    if len(needkick) != 0:
-                       # user_message =
-                        for element in needkick:
-                            if element['chat'] == event.chat_id:
-                                user_message += '* [id{1}|{0}] [id{1}] \n'.format(str(users.getName(vk_session,element['id'],'nom')), element['id'])
-                        if len(user_message) != 0:
-                            mem = bot_msg.banned_list + user_message
-                        else:
-                            mem = bot_msg.banlist_empty
-                        writeMessage(vk_session, event.chat_id, mem)
-                    else:
-                        writeMessage(vk_session, event.chat_id, bot_msg.banlist_empty)
+                    banlist = getBanList(vk_session, black_list, event.chat_id)
+                    writeMessage(vk_session, event.chat_id, banlist)
+
 
                 if (len(answer) == 2) and (answer[0] == '!addinbanlist'):
                     if not (chats.isAdmin(vk_session, event.user_id, chat_id)):
@@ -462,10 +478,10 @@ def main():
                     else: # Если пользователь - администратор
                         banned_user_id = answer[1] # ID пользователя, которого кидаем в ЧС
                         if users.isCanKick(vk_session, banned_user_id, event.chat_id, True): # Проверка, что пользователь не является админом и тд
-                            addBanList(vk_session, needkick, banned_user_id, event.chat_id, True) # Добавляем в черный список
+                            addBanList(vk_session, black_list, banned_user_id, event.chat_id, True) # Добавляем в черный список
                             logs.write('Added in banlist, chat: {0}, member: {1}'.format(event.chat_id, banned_user_id))
                             if chats.isUserInConversation(vk_session,banned_user_id,event.chat_id): # Если пользователь в беседе - кикаем его
-                                checkForBan(vk_session, needkick, banned_user_id, event.chat_id)
+                                checkForBan(vk_session, black_list, banned_user_id, event.chat_id)
 
                 if (len(answer) == 1) and (answer[0] == '!uptime'):
                     now = int(time.time()) # Текущее время
@@ -484,11 +500,11 @@ except Exception as error_msg:
     print(error_msg, file = f, end='\n')
     logs.write('ERROOOOOOOOOOR!!!!!!' + error_msg)
     f.close()
-    saveListToFile(needkick, const.file_name)
+    saveListToFile(black_list, const.file_name)
     logs.write("I'm finishing my work ...")
     main() # Произошло исключение - пробуем вернуться к работе
 else:
-    saveListToFile(needkick, const.file_name)
+    saveListToFile(black_list, const.file_name)
     logs.write("I'm finishing my work ...")
 
-print(needkick)
+print(black_list)
