@@ -8,6 +8,8 @@ nokick = {'sasha_pankratiew', 'alexey_shilo', 'id136385345', 'id138738887', '138
 
 file_name = 'v.ban'
 
+log_filename = 'voteban.log'
+
 vote_count = 5 # Минимальное кол-во голосов
 vote_time = 2 # Количество минут, сколько длится голосование
 spam_time = 10.0 # Анти-спам задержка (в секундах)

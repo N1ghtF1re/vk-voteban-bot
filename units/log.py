@@ -15,7 +15,7 @@ class Log(object):
 
     def write(self, message):
         currtime = str(datetime.datetime.now())
-        message = '> [{0}] {1}'.format(currtime, message)
+        message = '> [{0}] {1}'.format(currtime, str(message))
         print(message, end='\n', file=self.logfile)
         self.logfile.flush()
 

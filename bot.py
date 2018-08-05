@@ -270,7 +270,7 @@ def finishVote(vk, chat_id, kick_votes, black_list):
     message = bot_msg.finish_vote.format(users.getName(vk, kick_info['id']),kick_info['count_yes'],kick_info['count_no'])
     writeMessage(vk, chat_id, message)
 
-    logs.write('Vote ended. chat: {0}'.format(chat_id)')
+    logs.write('Vote ended. chat: {0}'.format(chat_id))
 
     try: # Если возникло исключение => бота кикнули из беседы
         if (len(kick_info['voted']) >= const.vote_count) and (kick_info['count_yes'] > kick_info['count_no']):
@@ -371,9 +371,6 @@ def formatDeltaTime(dt):
 # ------------------------ MAIN DEF -------------------------------------------
 
 def main():
-
-    logs = log.Log(const.log_filename)
-
     logs.write("I'm starting my work ...")
     start_date = int(time.time()) # Секунд с начала эпохи
     global black_list
@@ -487,6 +484,11 @@ def main():
                     now = int(time.time()) # Текущее время
                     delta = now - start_date # Разница во времени
                     writeMessage(vk_session, event.chat_id, bot_msg.my_uptime + formatDeltaTime(delta))
+
+
+
+logs = log.Log(const.log_filename) # Создаем объект логов
+
 
 try:
     if __name__ == '__main__':
