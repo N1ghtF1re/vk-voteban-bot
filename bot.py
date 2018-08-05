@@ -381,7 +381,6 @@ def main():
             print('Clearing getChatMember cache')
 
         if event.type is VkChatEventType.USER_JOINED: # Кто-то зашел в беседу
-            print(event.type)
             join_userid = event.info['user_id'] # id пользователя, который зашел в беседу
             print('User id{} joined'.format(join_userid))
             checkForBan(vk_session, needkick, join_userid, event.chat_id)
