@@ -27,6 +27,7 @@ import bot_msg
 
 from units import users
 from units import chats
+from units import log # Ведение лога бота
 from units.vkapi import writeMessage, kickUser
 
 from functools import lru_cache
@@ -243,6 +244,8 @@ def finishVote(vk, chat_id, kick_list, needkick):
     message = bot_msg.finish_vote.format(users.getName(vk, kick_info['id']),kick_info['count_yes'],kick_info['count_no'])
     writeMessage(vk, chat_id, message)
 
+    logs.write('Vote ended. chat: {0}'.format(chat_id)')
+
     try: # Если возникло исключение => бота кикнули из беседы
         if (len(kick_info['voted']) >= const.vote_count) and (kick_info['count_yes'] > kick_info['count_no']):
             if(chats.isUserInConversation(vk,kick_info['id'], chat_id)): # Если пользователь все еще в беседе
@@ -258,7 +261,7 @@ def finishVote(vk, chat_id, kick_list, needkick):
         else:
             writeMessage(vk, chat_id, bot_msg.user_remains)
     except vk_api.ApiError:
-        print('Меня кикнули(')
+        logs.write("WARNING! Bot's kicked in chat {0}".format(chat_id))
 
     kick_list.pop(find_delete(kick_list,chat_id)) # Извлекаем из очереди на кик
 
@@ -272,7 +275,7 @@ def onTimerSave(file):
     '''
     global needkick
     saveListToFile(needkick, file)
-    print('Save to file..')
+    logs.write('Create banlist backup..')
     saveTimer = threading.Timer(const.backups_time*60, onTimerSave, [file])
     saveTimer.start()
 
@@ -285,12 +288,12 @@ def checkFriend(vk):
         :NoReturn:
         '''
 
-    print('Checking friends...')
+    logs.write('Checking friends...')
     obj = vk.method('friends.getRequests') # получаем список всех заявок в друзья (непрочитанных!)
-    print(obj)
+    logs.write(obj)
     for id in obj['items']: # перебираем все заявки
          vk.method('friends.add', {'user_id': id, 'follow': 0}) # добавляем в друзья
-         print(id, 'added')
+         logs.write(id, 'added')
     friendTimer = threading.Timer(const.friends_time*60, checkFriend, [vk]) # проверка на наличе новых друзей каждый час
     friendTimer.start()
 
@@ -302,11 +305,11 @@ def captcha_handler(captcha):
 
     :return: Новая_попытка_отправить_сообщение_с_введенно_капчей
     '''
-    print('Entered captcha')
+    logs.write('Entered captcha')
     key = ImageToTextTask.ImageToTextTask(anticaptcha_key=antiCaptchaKey, save_format='const') \
             .captcha_handler(captcha_link=captcha.get_url())
 
-    print(key)
+    logs.write('Key: ' + key)
 
     # Пробуем снова отправить запрос с капчей
     return captcha.try_again(key['solution']['text'])
@@ -342,12 +345,13 @@ def formatDeltaTime(dt):
 # ------------------------ MAIN DEF -------------------------------------------
 
 def main():
-    print("I'm starting my work ...")
+
+    logs = log.Log(const.log_filename)
+
+    logs.write("I'm starting my work ...")
     start_date = int(time.time()) # Секунд с начала эпохи
     global needkick
     global kick_list
-    print('Kick list: ', end='')
-    print(kick_list)
 
     try:
         f = open(const.file_name, 'r')
@@ -369,7 +373,7 @@ def main():
     try:
         vk_session.auth(token_only=True) # Авторизируемся
     except vk_api.AuthError as error_msg:
-        print(error_msg)
+        logs.write(error_msg)
         return
 
     checkFriend(vk_session) # Ежечасовая проверка друзей
@@ -378,11 +382,11 @@ def main():
     for event in longpoll.listen(): # События VkLongPoll
         if (event.type is VkChatEventType.USER_JOINED) or (event.type is VkChatEventType.USER_LEFT) or (event.type is VkChatEventType.USER_KICKED):
             chats.getChatMembers.cache_clear() # Если кто-то пришел/ушел - очищаем кеш функции chats.getChatMembers
-            print('Clearing getChatMember cache')
+            logs.write('Clearing getChatMember cache')
 
         if event.type is VkChatEventType.USER_JOINED: # Кто-то зашел в беседу
             join_userid = event.info['user_id'] # id пользователя, который зашел в беседу
-            print('User id{} joined'.format(join_userid))
+            logs.write('User id{} joined'.format(join_userid))
             checkForBan(vk_session, needkick, join_userid, event.chat_id)
 
 
@@ -411,6 +415,8 @@ def main():
                                 user_message = bot_msg.start_vote.format(user_id, user, const.vote_time, const.vote_count)
                                 kick_list.append(addKickMan(vk_session,user_id,chat_id)) # Добавляем в список очереди на кик
 
+                                logs.write('New voteban: chat: {0}, member: {1}'.format(chat_id, user_id))
+
                                 timer = threading.Timer(60*const.vote_time, finishVote, [vk_session, chat_id, kick_list, needkick])
                                 timer.start()
                                 writeMessage(vk_session, chat_id, user_message)
@@ -433,6 +439,7 @@ def main():
                     else:
                         user_id = answer[1]
                         unbanUser(vk_session,user_id,needkick,event.chat_id)
+                        logs.write('Unbaned user, chat: {0}, member: {1}'.format(event.chat_id, user_id))
 
                 if (len(answer) == 1) and (answer[0] == '!banlist'):
                     user_message = ''
@@ -456,6 +463,7 @@ def main():
                         banned_user_id = answer[1] # ID пользователя, которого кидаем в ЧС
                         if users.isCanKick(vk_session, banned_user_id, event.chat_id, True): # Проверка, что пользователь не является админом и тд
                             addBanList(vk_session, needkick, banned_user_id, event.chat_id, True) # Добавляем в черный список
+                            logs.write('Added in banlist, chat: {0}, member: {1}'.format(event.chat_id, banned_user_id))
                             if chats.isUserInConversation(vk_session,banned_user_id,event.chat_id): # Если пользователь в беседе - кикаем его
                                 checkForBan(vk_session, needkick, banned_user_id, event.chat_id)
 
@@ -474,13 +482,13 @@ except Exception as error_msg:
         f = open('error.log', 'w')
     print(str(time.localtime(time.time())), file=f, end=' ')
     print(error_msg, file = f, end='\n')
+    logs.write('ERROOOOOOOOOOR!!!!!!' + error_msg)
     f.close()
-    print(needkick)
     saveListToFile(needkick, const.file_name)
-    print("I'm finishing my work ...")
+    logs.write("I'm finishing my work ...")
     main() # Произошло исключение - пробуем вернуться к работе
 else:
     saveListToFile(needkick, const.file_name)
-    print("I'm finishing my work ...")
+    logs.write("I'm finishing my work ...")
 
 print(needkick)
