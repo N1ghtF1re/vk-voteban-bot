@@ -230,7 +230,7 @@ def isUserInBanList(black_list, user_id, chat_id):
     '''
     return list(filter(lambda ban_dict: (ban_dict['id'] == user_id) and (ban_dict['chat'] == chat_id), black_list) )
 
-def getBanList(vk, ban_list, chat_id):
+def getBanList(vk, black_list, chat_id):
     ''' Вовращает ЧС список беседы с ID = chat_id
 
         :param vk: Объект сессии ВК
@@ -244,7 +244,7 @@ def getBanList(vk, ban_list, chat_id):
        # user_message =
         for element in black_list:
             if element['chat'] == chat_id:
-                user_message += '* [id{1}|{0}] [id{1}] \n'.format(str(users.getName(vk_session,element['id'],'nom')), element['id'])
+                user_message += '* [id{1}|{0}] [id{1}] \n'.format(str(users.getName(vk,element['id'],'nom')), element['id'])
         if len(user_message) != 0:
             message = bot_msg.banned_list + user_message
         else:
@@ -333,11 +333,10 @@ def captcha_handler(captcha):
 
     :return: Новая_попытка_отправить_сообщение_с_введенно_капчей
     '''
-    logs.write('Entered captcha')
+
     key = ImageToTextTask.ImageToTextTask(anticaptcha_key=antiCaptchaKey, save_format='const') \
             .captcha_handler(captcha_link=captcha.get_url())
-
-    logs.write('Key: ' + key)
+    logs.write('IMPORTANT: Entered captcha. Key: ' + str(key))
 
     # Пробуем снова отправить запрос с капчей
     return captcha.try_again(key['solution']['text'])
@@ -411,7 +410,7 @@ def main():
 
         if event.type is VkChatEventType.USER_JOINED: # Кто-то зашел в беседу
             join_userid = event.info['user_id'] # id пользователя, который зашел в беседу
-            logs.write('User id{} joined'.format(join_userid))
+            logs.write('User id{0} joined at chat {1}'.format(join_userid, event.chat_id))
             checkForBan(vk_session, black_list, join_userid, event.chat_id)
 
 
@@ -502,7 +501,7 @@ except Exception as error_msg:
         f = open('error.log', 'w')
     print(str(time.localtime(time.time())), file=f, end=' ')
     print(error_msg, file = f, end='\n')
-    logs.write('ERROOOOOOOOOOR!!!!!!' + error_msg)
+    logs.write('ERROR!!!!!!' + error_msg)
     f.close()
     saveListToFile(black_list, const.file_name)
     logs.write("I'm finishing my work ...")
