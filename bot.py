@@ -37,6 +37,10 @@ from functools import lru_cache
 
 black_list = [] # Пользователи в ЧС беседы. Формат: [{'id':id, 'chat_id':chat_id}, {...}]
 
+votecount_dict = {} # Установка своего кол-ва голосов для кика
+
+votetime_dict = {} # Установка своего времени для кика
+
 
 
 ''' Список голосований на кик.
@@ -275,7 +279,7 @@ def finishVote(vk, chat_id, kick_votes, black_list):
     logs.write('Vote ended. chat: {0}'.format(chat_id))
 
     try: # Если возникло исключение => бота кикнули из беседы
-        if (len(kick_info['voted']) >= const.vote_count) and (kick_info['count_yes'] > kick_info['count_no']):
+        if (len(kick_info['voted']) >= votecount_dict.get(event.chat_id, const.vote_count)) and (kick_info['count_yes'] > kick_info['count_no']):
             if(chats.isUserInConversation(vk,kick_info['id'], chat_id)): # Если пользователь все еще в беседе
                 writeMessage(vk, chat_id, bot_msg.user_excluded)
                 # Исключаем пользователя
@@ -284,8 +288,8 @@ def finishVote(vk, chat_id, kick_votes, black_list):
                 writeMessage(vk,chat_id, bot_msg.user_leave)
             addBanList(vk, black_list, kick_info['id'], chat_id)
 
-        elif len(kick_info['voted']) < const.vote_count:
-            writeMessage(vk, chat_id, bot_msg.no_votes_cast.format(len(kick_info['voted']), const.vote_count))
+        elif len(kick_info['voted']) < votecount_dict.get(event.chat_id, const.vote_count):
+            writeMessage(vk, chat_id, bot_msg.no_votes_cast.format(len(kick_info['voted']), votecount_dict.get(event.chat_id, const.vote_count)))
         else:
             writeMessage(vk, chat_id, bot_msg.user_remains)
     except vk_api.ApiError:
@@ -436,7 +440,7 @@ def main():
                                     'FullID'
                                 else:
                                     user_id = 'id' + user_id
-                                user_message = bot_msg.start_vote.format(user_id, user, const.vote_time, const.vote_count)
+                                user_message = bot_msg.start_vote.format(user_id, user, const.vote_time, votecount_dict.get(event.chat_id, const.vote_count))
                                 kick_votes.append(addKickMan(vk_session,user_id,chat_id)) # Добавляем в список очереди на кик
 
                                 logs.write('New voteban: chat: {0}, member: {1}'.format(chat_id, user_id))
@@ -449,7 +453,7 @@ def main():
                             writeMessage(vk_session, chat_id, user_message)
 
                 if (len(answer) == 1) and ((answer[0] == '!votehelp') or (answer[0] == '!voteban')):
-                    message = bot_msg.help.format(const.vote_time, const.vote_count)
+                    message = bot_msg.help.format(votetime_dict.get(event.chat_id,const.vote_time), votecount_dict.get(event.chat_id, const.vote_count))
                     writeMessage(vk_session, chat_id , message)
                 if (len(answer) == 1) and (answer[0] in const.kick_commands) and searchKickList(kick_votes, chat_id):
                     voiceProcessing(event,kick_votes,vk_session,searchKickList(kick_votes,event.chat_id),'count_yes')
@@ -468,6 +472,39 @@ def main():
                 if (len(answer) == 1) and (answer[0] == '!banlist'):
                     banlist = getBanList(vk_session, black_list, event.chat_id)
                     writeMessage(vk_session, event.chat_id, banlist)
+
+                if (len(answer) == 1) and (answer[0] == '!authors'):
+                    message = bot_msg.authors
+                    writeMessage(vk_session, chat_id, message)
+
+                if (len(answer) == 2) and (answer[0] == '!setvotecount'):
+                    if not (chats.isAdmin(vk_session, event.user_id, chat_id)):
+                        writeMessage(vk_session, event.chat_id, bot_msg.you_are_not_admin)
+                    else:
+                        try:
+                            if 1 <= int (answer[1]) <= 20:
+                                votecount_dict[event.chat_id] = int (answer[1])
+                                message = bot_msg.setvote.format(votecount_dict.get(event.chat_id))
+                                writeMessage(vk_session, event.chat_id, message)
+                            else:
+                                writeMessage(vk_session,event.chat_id,bot_msg.you_have_autism)
+                        except ValueError:
+                            writeMessage(vk_session, event.chat_id, bot_msg.you_have_autism)
+
+                if (len(answer) == 2) and (answer[0] == '!setvotetime'):
+                    if not (chats.isAdmin(vk_session, event.user_id, chat_id)):
+                        writeMessage(vk_session, event.chat_id, bot_msg.you_are_not_admin)
+                    else:
+                        try:
+                            if 0.5 <= round(float(answer[1]),1) <= 10:
+                                votetime_dict[event.chat_id] = float (answer[1])
+                                message = bot_msg.settime.format(votetime_dict.get(event.chat_id,2))
+                                writeMessage(vk_session,event.chat_id,message)
+                            else:
+                                writeMessage(vk_session,event.chat_id,bot_msg.you_have_autism)
+                        except ValueError:
+                            writeMessage(vk_session, event.chat_id, bot_msg.you_have_autism)
+
 
 
                 if (len(answer) == 2) and (answer[0] == '!addinbanlist'):
