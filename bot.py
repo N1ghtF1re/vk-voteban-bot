@@ -528,23 +528,16 @@ def main():
 logs = log.Log(const.log_filename) # Создаем объект логов
 
 
-try:
-    if __name__ == '__main__':
-        main()
-except Exception as error_msg:
+while True:
     try:
-        f = open('error.log', 'a')
-    except IOError:
-        f = open('error.log', 'w')
-    print(str(time.localtime(time.time())), file=f, end=' ')
-    print(error_msg, file = f, end='\n')
-    logs.write('ERROR!!!!!!' + error_msg)
-    f.close()
-    saveListToFile(black_list, const.file_name)
-    logs.write("I'm finishing my work ...")
-    main() # Произошло исключение - пробуем вернуться к работе
-else:
-    saveListToFile(black_list, const.file_name)
-    logs.write("I'm finishing my work ...")
+        if __name__ == '__main__':
+            main()
+    except Exception as error_msg:
+        logs.write('ERROR!!!!!!' + error_msg)
+        saveListToFile(black_list, const.file_name)
+        logs.write("I'm finishing my work ...")
+    else:
+        saveListToFile(black_list, const.file_name)
+        logs.write("I'm finishing my work ...")
 
 print(black_list)

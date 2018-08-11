@@ -1,9 +1,9 @@
 vk_config.v2.json
 config.py
+command.txt
 
+*.log
 *.pyc
 *.ban
 PythonAntiCaptchaImages/
 __pycache__/
-
-error.log

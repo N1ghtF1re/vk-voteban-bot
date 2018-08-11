@@ -14,8 +14,8 @@ class Log(object):
             self.logfile =  open(filename, 'w')
 
     def write(self, message):
-        currtime = str(datetime.datetime.now())
-        message = '> [{0}] {1}'.format(currtime, str(message))
+        currtime = str(datetime.datetime.now().strftime('%d.%m.%Y %H:%M:%S'))
+        message = '[{0}] {1}'.format(currtime, str(message))
         print(message, end='\n', file=self.logfile)
         self.logfile.flush()
 
