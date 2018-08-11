@@ -21,7 +21,7 @@ The bot has a built-in anti-flood system and there is a possibility to use the C
 Python 3+ should be installed on your computer. If you did not, here's [link](https://www.python.org/downloads/)
 
 The following Python packages must be installed:
-* vk_api
+* [vk_api](https://github.com/python273/vk_api)
 * python3_anticaptcha
 
 ## How to use
@@ -44,6 +44,8 @@ You can also edit the constants in const.py (the time of voting, the number of v
 + !uptime - bot's uptime
 + !unban USER_ID [ONLY FOR ADMINISTRATORS] to unlock the user.
 + !addinbanlist USER_ID [ONLY FOR ADMINISTRATORS] to force the user to add a banlist.
++ !setvotecount NUMBER [ONLY FOR ADMINISTRATORS] - sets the minimum number of people needed for voting (default: 5)
++ !setvotetime NUMBER_OF_MINUT [ONLY FOR ADMINISTRATORS] - sets the time required for voting (default: 2 minutes)
 
 ## Developers
 In the development of this bot involved:
@@ -62,7 +64,7 @@ In the development of this bot involved:
 На вашем компьютере должен быть установлен Python 3+. Если вы этого не сделали - вот [ссылка](https://www.python.org/downloads/)
 
 Должны быть установлены следующие пакеты Python
-* vk_api
+* [vk_api](https://github.com/python273/vk_api)
 * python3_anticaptcha
 
 ## Руководство по использованию
@@ -85,6 +87,8 @@ python bot.py
 + !uptime - Время работы бота;
 + !unban ID_ПОЛЬЗОВАТЕЛЯ [ТОЛЬКО ДЛЯ АДМИНИСТРАТОРОВ БЕСЕДЫ] - разблокировать пользователя;
 + !addinbanlist ID_ПОЛЬЗОВАТЕЛЯ [ТОЛЬКО ДЛЯ АДМИНИСТРАТОРОВ БЕСЕДЫ] - принудительно добавить пользователя в бан-лист.
++ !setvotecount КОЛ_ВО [ТОЛЬКО ДЛЯ АДМИНИСТРАТОРОВ БЕСЕДЫ] - устанавливает минимальное количество человек, необходимое для голосования (по-умолчанию: 5)
++ !setvotetime КОЛ_ВО_МИНУТ [ТОЛЬКО ДЛЯ АДМИНИСТРАТОРОВ БЕСЕДЫ] -  устанавливает время, необходимое для голосования (по-умолчанию: 2 минуты)
 
 ## Разработчики
 В разработке этого бота участвовали:
