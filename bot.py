@@ -279,7 +279,7 @@ def finishVote(vk, chat_id, kick_votes, black_list):
     logs.write('Vote ended. chat: {0}'.format(chat_id))
 
     try: # Если возникло исключение => бота кикнули из беседы
-        if (len(kick_info['voted']) >= votecount_dict.get(event.chat_id, const.vote_count)) and (kick_info['count_yes'] > kick_info['count_no']):
+        if (len(kick_info['voted']) >= votecount_dict.get(chat_id, const.vote_count)) and (kick_info['count_yes'] > kick_info['count_no']):
             if(chats.isUserInConversation(vk,kick_info['id'], chat_id)): # Если пользователь все еще в беседе
                 writeMessage(vk, chat_id, bot_msg.user_excluded)
                 # Исключаем пользователя
@@ -288,8 +288,8 @@ def finishVote(vk, chat_id, kick_votes, black_list):
                 writeMessage(vk,chat_id, bot_msg.user_leave)
             addBanList(vk, black_list, kick_info['id'], chat_id)
 
-        elif len(kick_info['voted']) < votecount_dict.get(event.chat_id, const.vote_count):
-            writeMessage(vk, chat_id, bot_msg.no_votes_cast.format(len(kick_info['voted']), votecount_dict.get(event.chat_id, const.vote_count)))
+        elif len(kick_info['voted']) < votecount_dict.get(chat_id, const.vote_count):
+            writeMessage(vk, chat_id, bot_msg.no_votes_cast.format(len(kick_info['voted']), votecount_dict.get(chat_id, const.vote_count)))
         else:
             writeMessage(vk, chat_id, bot_msg.user_remains)
     except vk_api.ApiError:
@@ -440,12 +440,12 @@ def main():
                                     'FullID'
                                 else:
                                     user_id = 'id' + user_id
-                                user_message = bot_msg.start_vote.format(user_id, user, const.vote_time, votecount_dict.get(event.chat_id, const.vote_count))
+                                user_message = bot_msg.start_vote.format(user_id, user, votetime_dict.get(event.chat_id,const.vote_time), votecount_dict.get(event.chat_id, const.vote_count))
                                 kick_votes.append(addKickMan(vk_session,user_id,chat_id)) # Добавляем в список очереди на кик
 
                                 logs.write('New voteban: chat: {0}, member: {1}'.format(chat_id, user_id))
 
-                                timer = threading.Timer(60*const.vote_time, finishVote, [vk_session, chat_id, kick_votes, black_list])
+                                timer = threading.Timer(60*votetime_dict.get(event.chat_id,const.vote_time), finishVote, [vk_session, chat_id, kick_votes, black_list])
                                 timer.start()
                                 writeMessage(vk_session, chat_id, user_message)
                         else:
@@ -533,7 +533,7 @@ while True:
         if __name__ == '__main__':
             main()
     except Exception as error_msg:
-        logs.write('ERROR!!!!!!' + error_msg)
+        logs.write('ERROR!!!!!!' + str(error_msg))
         saveListToFile(black_list, const.file_name)
         logs.write("I'm finishing my work ...")
     else:
