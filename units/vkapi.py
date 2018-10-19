@@ -16,7 +16,18 @@ def writeMessage(vk, chat_id, message):
 
         :NoReturn:
     '''
-    vk.method('messages.send', {'chat_id':chat_id, 'message': message})
+    if len(message) >= 3000:
+        for i in range(3000, len(message)):
+            print(i)
+            print(len(message))
+            if message[i] == '\n' or i == 4000:
+                restMessage=message[slice(i, len(message))]
+                message = message[slice(0,i)]
+                vk.method('messages.send', {'chat_id':chat_id, 'message': message})
+                writeMessage(vk, chat_id, restMessage)
+                break
+    else:
+        vk.method('messages.send', {'chat_id':chat_id, 'message': message})
 
 def kickUser(vk, chat_id, user_id):
     ''' Выгоняет пользователя из беседы

@@ -377,7 +377,6 @@ def formatDeltaTime(dt):
 
 def main():
     logs.write("I'm starting my work ...")
-    start_date = int(time.time()) # Секунд с начала эпохи
     global black_list
     global kick_votes
 
@@ -408,6 +407,7 @@ def main():
 
     longpoll = VkLongPoll(vk_session)
     for event in longpoll.listen(): # События VkLongPoll
+        print(event.type)
         if (event.type is VkChatEventType.USER_JOINED) or (event.type is VkChatEventType.USER_LEFT) or (event.type is VkChatEventType.USER_KICKED):
             chats.getChatMembers.cache_clear() # Если кто-то пришел/ушел - очищаем кеш функции chats.getChatMembers
             logs.write('Clearing getChatMember cache')
@@ -527,7 +527,7 @@ def main():
 
 logs = log.Log(const.log_filename) # Создаем объект логов
 
-
+start_date = int(time.time()) # Секунд с начала эпохи
 while True:
     try:
         if __name__ == '__main__':
